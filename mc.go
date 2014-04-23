@@ -41,7 +41,7 @@ type Minecraft struct {
 
 	// Player related
 	ThePlayer *Player
-	Players map[byte]*Player
+	Players map[int8]*Player
 
 	// Misc
 	LoggedIn bool
@@ -224,13 +224,50 @@ func (m *Minecraft) handle() {
 					player.Location.Z = p.Z
 					player.Location.Yaw = p.Yaw
 					player.Location.Pitch = p.Pitch
-					if m.Players[p.PlayerId].Location.X != p.X {
-						panic("I don't know how Go works.")
-					}
 				}
 
+			// TODO: 'queue' updates, rather than simply setting position directly?
+			// It's how Notchian client does it, but probably isn't really an issue
+			// in this use case.
+			case *packets.PositionOrientationUpdate:
+					player, ok := m.Players[p.PlayerId]
+					if !ok {
+							panic("kyubu: received position/orientation update for non-existent player")
+					}
+					// TODO: These will probably overflow. Account for that.
+					player.Location.X += int16(p.X)
+					player.Location.Y += int16(p.Y)
+					player.Location.Z += int16(p.Z)
+					player.Location.Yaw += p.Yaw
+					player.Location.Pitch += p.Pitch
+
+			case *packets.PositionUpdate:
+					player, ok := m.Players[p.PlayerId]
+					if !ok {
+							panic("kyubu: received position update for non-existent player")
+					}
+					// TODO: These will overflow too.
+					player.Location.X += int16(p.X)
+					player.Location.Y += int16(p.Y)
+					player.Location.Z += int16(p.Z)
+
+			case *packets.OrientationUpdate:
+					player, ok := m.Players[p.PlayerId]
+					if !ok {
+							panic("kyubu: received orientation update for non-existent player")
+					}
+					// TODO: These will overflow too.
+					player.Location.Yaw += p.Yaw
+					player.Location.Pitch += p.Pitch
+
 			case *packets.DespawnPlayer:
-				delete(m.Players, p.PlayerId)
+					delete(m.Players, p.PlayerId)
+
+			case *packets.DisconnectPlayer:
+					m.Quit()
+
+			case *packets.UpdateUserType:
+					m.ThePlayer.Op = p.UserType == 0x64
 		}
 	}
 }
@@ -248,7 +285,7 @@ func New(host string, port int, username, key string) (m *Minecraft, err error) 
 		InQueue:  make(chan packets.Packet),
 		internalQueue: make(chan packets.Packet),
 		ThePlayer: &Player{Id: -1, Name: username},
-		// The rest are zero until otherwise needed.
+		Players: make(map[int8]*Player),
 	}
 	go m.writeQueue()
 	go m.read()

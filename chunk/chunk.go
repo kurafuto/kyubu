@@ -20,8 +20,8 @@ func (ch *Chunk) TileAt(x, y, z int16) byte {
 		x >= ch.X || y >= ch.Y || z >= ch.Z) {
 		return 0
 	}
-	b := ch.Data[(y * ch.Y + z) * ch.X + x] & 255
-	return b
+	index := (z * ch.Z + y) * ch.X + x
+	return ch.Data[index] & 255
 }
 
 func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
@@ -29,7 +29,8 @@ func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
 		x >= ch.X || y >= ch.Y || z >= ch.Z) {
 		return
 	}
-	ch.Data[(y * ch.Y + z) * ch.X + x] = blockType
+	index := (z * ch.Z + y) * ch.X + x
+	ch.Data[index] = blockType
 }
 
 func (ch *Chunk) Compress() ([]byte, error) {
