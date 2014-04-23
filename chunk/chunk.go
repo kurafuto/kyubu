@@ -15,13 +15,16 @@ type Chunk struct {
 	X, Y, Z int16
 }
 
+func (ch *Chunk) calcIndex(x, y, z int16) int16 {
+	return (y*ch.Z + z)*ch.X + x
+}
+
 func (ch *Chunk) TileAt(x, y, z int16) byte {
 	if (x < 0 || y < 0 || z < 0 ||
 		x >= ch.X || y >= ch.Y || z >= ch.Z) {
 		return 0
 	}
-	index := (z * ch.Z + y) * ch.X + x
-	return ch.Data[index] & 255
+	return ch.Data[ch.calcIndex(x, y, z)]
 }
 
 func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
@@ -29,8 +32,7 @@ func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
 		x >= ch.X || y >= ch.Y || z >= ch.Z) {
 		return
 	}
-	index := (z * ch.Z + y) * ch.X + x
-	ch.Data[index] = blockType
+	ch.Data[ch.calcIndex(x, y, z)] = blockType
 }
 
 func (ch *Chunk) Compress() ([]byte, error) {
