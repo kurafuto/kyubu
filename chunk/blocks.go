@@ -1,6 +1,61 @@
 package chunk
 
-var Blocks = map[byte]string{
+type BlockId byte
+
+const (
+	Air = BlockId(iota)
+	Stone
+	Grass
+	Dirt
+	Cobblestone
+	WoodenPlank
+	Sapling
+	Bedrock
+	Water
+	StationaryWater
+	Lava
+	StationaryLava
+	Sand
+	Gravel
+	GoldOre
+	IronOre
+	CoalOre
+	Wood
+	Leaves
+	Sponge
+	Glass
+	RedCloth
+	OrangeCloth
+	YellowCloth
+	LimeCloth
+	GreenCloth
+	AquaGreenCloth
+	CyanCloth
+	BlueCloth
+	PurpleCloth
+	IndigoCloth
+	VioletCloth
+	MagentaCloth
+	PinkCloth
+	BlackCloth
+	GrayCloth
+	WhiteCloth
+	Dandelion
+	Rose
+	BrownMushroom
+	RedMushroom
+	GoldBlock
+	IronBlock
+	DoubleSlab
+	Slab
+	BrickBlock
+	TNT
+	Bookshelf
+	MossStone
+	Obsidian
+)
+
+var Blocks = map[BlockId]string{
 	0x00: "Air",
 	0x01: "Stone",
 	0x02: "Grass",
@@ -42,8 +97,8 @@ var Blocks = map[byte]string{
 	0x26: "Rose",
 	0x27: "Brown Mushroom",
 	0x28: "Red Mushroom",
-	0x29: "Block of Gold",
-	0x2a: "Block of Iron",
+	0x29: "Gold Block",
+	0x2a: "Iron Block",
 	0x2b: "Double Slab",
 	0x2c: "Slab",
 	0x2d: "Brick Block",

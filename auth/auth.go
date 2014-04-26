@@ -11,6 +11,8 @@ type Server struct {
 
 	MaxPlayers int `json:"maxplayers"`
 	Players    int `json:"players"`
+
+	Direct string
 }
 
 type Auth interface {
@@ -20,4 +22,4 @@ type Auth interface {
 	//Key() string
 }
 
-type AuthFunc func(string, string) *Auth
+type AuthFunc func(string, string) Auth

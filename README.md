@@ -13,50 +13,8 @@ internals):
 * `kyubu/auth`- ClassiCube authentication
 
 The client impl. is kind of messy right now, and goes through sweeping changes
-every commit or two. Right now, you can use it like:
-
-```go
-import (
-	"fmt"
-	"github.com/sysr-q/kyubu"
-	"github.com/sysr-q/kyubu/packets"
-	"github.com/sysr-q/kyubu/auth"
-)
-
-func main() {
-	// NOTE! ClassiCube auth is not 100% implemented, so this will fail to
-	// connect to verify-names=true servers.
-	settings := kyubu.Settings{
-		Server: auth.Server{Address: "mcc.example.com", Port: 25565, MpPass: "validationkey"},
-		Auth: auth.NewClassiCube("notch", "password"),
-		Trickle: 25,
-		Debug: false,
-	}
-	k, err := kyubu.New(settings)
-	if err != nil {
-		panic(err)
-	}
-
-	saidHello := false
-	for {
-		packet := <-k.In
-		if packet == nil {
-			// Server disconnect, etc.
-			break
-		}
-
-		if !saidHello && k.LoggedIn {
-			// You should check the error for new packets, but this is just an example.
-			mesg, _ := packets.NewMessage(127, "Hello, world!")
-			k.Out <- mesg
-			saidHello = true
-		}
-
-		packetName := packets.Packets[packet.Id()].Ident
-		fmt.Printf("<-[%#.2x] %s: recv!\n", packet.Id(), packetName)
-	}
-}
-```
+every commit or two. If you look in the `examples` directory, you can see the
+same script I use to test - that will always have a working example.
 
 ## Roadmap
 

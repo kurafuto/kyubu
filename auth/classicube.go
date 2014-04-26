@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"fmt"
 )
 
 const ccApiBase = "http://www.classicube.net/api/"
@@ -91,6 +92,12 @@ func (c *classiCube) ServerList() ([]Server, error) {
 		return nil, err
 	}
 
+	for i, server := range servers {
+		if server.MpPass == "" {
+			continue
+		}
+		servers[i].Direct = fmt.Sprintf("mc://%s:%d/%s/%s", server.Address, server.Port, c.username, server.MpPass)
+	}
 	return servers, nil
 }
 
