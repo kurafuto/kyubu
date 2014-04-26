@@ -1,8 +1,8 @@
 package packets
 
 import (
-	"io"
 	"fmt"
+	"io"
 )
 
 type Parser interface {

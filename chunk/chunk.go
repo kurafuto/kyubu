@@ -10,26 +10,26 @@ import (
 )
 
 type Chunk struct {
-	Length int
-	Data []byte
+	Length  int
+	Data    []byte
 	X, Y, Z int16
 }
 
 func (ch *Chunk) calcIndex(x, y, z int16) int16 {
-	return (y*ch.Z + z)*ch.X + x
+	return (y*ch.Z+z)*ch.X + x
 }
 
 func (ch *Chunk) TileAt(x, y, z int16) byte {
-	if (x < 0 || y < 0 || z < 0 ||
-		x >= ch.X || y >= ch.Y || z >= ch.Z) {
+	if x < 0 || y < 0 || z < 0 ||
+		x >= ch.X || y >= ch.Y || z >= ch.Z {
 		return 0
 	}
 	return ch.Data[ch.calcIndex(x, y, z)]
 }
 
 func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
-	if (x < 0 || y < 0 || z < 0 ||
-		x >= ch.X || y >= ch.Y || z >= ch.Z) {
+	if x < 0 || y < 0 || z < 0 ||
+		x >= ch.X || y >= ch.Y || z >= ch.Z {
 		return
 	}
 	ch.Data[ch.calcIndex(x, y, z)] = blockType
@@ -65,18 +65,18 @@ func Decompress(b []byte, x, y, z int16) (*Chunk, error) {
 		return nil, err
 	}
 
-	// I don't know /why/ we need to cast back to int first, but if we don't,
-	// we'll get x*y*z == 0. Yeah.
-	if length != int32(int(x)*int(y)*int(z)) {
-		return nil, fmt.Errorf("kyubu/chunk: decoded length %d doesn't match given %d*%d*%d = %d", length, x, y, z, int32(int(x)*int(y)*int(z)))
+	// NOTE: Have to cast back to int first, otherwise x*y*z == 0. /shrug/
+	xyz := int32(int(x) * int(y) * int(z))
+	if length != xyz {
+		return nil, fmt.Errorf("kyubu/chunk: decoded length %d doesn't match given %d*%d*%d = %d", length, x, y, z, xyz)
 	}
-	
+
 	chunk := &Chunk{
 		Length: int(length),
-		Data: make([]byte, length),
-		X: x,
-		Y: y,
-		Z: z,
+		Data:   make([]byte, length),
+		X:      x,
+		Y:      y,
+		Z:      z,
 	}
 	if _, err = gz.Read(chunk.Data); err != nil {
 		return nil, err
