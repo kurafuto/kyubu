@@ -86,3 +86,62 @@ func TestIncorrectLength(t *testing.T) {
 		t.Fatal("Chunk decompressed 8 byte level from %d bytes", len(data))
 	}
 }
+
+func TestSetTile(t *testing.T) {
+	data := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	compressed, err := compressBytes(data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ch, err := Decompress(compressed, 2, 2, 2)
+	if err != nil {
+		t.Fatal("error decompressing chunk:", err)
+	}
+
+	ch.SetTile(0, 0, 0, 0x31)
+	if ch.Data[0] != 0x31 {
+		t.Fatalf("expected 0x31 at (0, 0, 0) but found %#.2x", ch.Data[0])
+	}
+}
+
+func TestTileAt(t *testing.T) {
+	data := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	compressed, err := compressBytes(data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ch, err := Decompress(compressed, 2, 2, 2)
+	if err != nil {
+		t.Fatal("error decompressing chunk:", err)
+	}
+
+	if ch.TileAt(1, 1, 1) != 0x07 {
+		t.Fatalf("expected 0x07 at (1, 1, 1) but found %#.2x", ch.TileAt(1, 1, 1))
+	}
+}
+
+func TestInvalidTileAt(t *testing.T) {
+	data := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	compressed, err := compressBytes(data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ch, err := Decompress(compressed, 2, 2, 2)
+	if err != nil {
+		t.Fatal("error decompressing chunk:", err)
+	}
+
+	if ch.TileAt(64, 64, 64) != 0x00 {
+		t.Fatalf("expected 0x00 at (64, 64, 64) but found %#.2x", ch.TileAt(64, 64, 64))
+	}
+
+	ch.SetTile(64, 64, 64, 0x64)
+	for i, v := range ch.Data {
+		if v == 0x64 {
+			t.Fatalf("Found 0x64 at ch.Data[%d], shouldn't exist", i)
+		}
+	}
+}
