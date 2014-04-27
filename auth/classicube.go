@@ -2,11 +2,11 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"fmt"
 )
 
 const ccApiBase = "http://www.classicube.net/api/"

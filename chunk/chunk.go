@@ -38,7 +38,7 @@ func (ch *Chunk) SetTile(x, y, z int16, blockType byte) {
 func (ch *Chunk) Compress() ([]byte, error) {
 	b := bytes.NewBuffer([]byte{})
 	gz := gzip.NewWriter(b)
-	if err := binary.Write(gz, binary.BigEndian, &ch.Length); err != nil {
+	if err := binary.Write(gz, binary.BigEndian, int32(ch.Length)); err != nil {
 		return nil, err
 	}
 	if _, err := gz.Write(ch.Data); err != nil {

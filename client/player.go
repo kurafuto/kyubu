@@ -1,4 +1,4 @@
-package kyubu
+package client
 
 type Player struct {
 	Id              int8

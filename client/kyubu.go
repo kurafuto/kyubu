@@ -1,16 +1,16 @@
-package kyubu
+package client
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/sysr-q/kyubu/auth"
 	"github.com/sysr-q/kyubu/chunk"
 	"github.com/sysr-q/kyubu/packets"
 	"net"
-	"time"
 	"regexp"
-	"errors"
 	"strconv"
+	"time"
 )
 
 type Settings struct {
@@ -21,6 +21,7 @@ type Settings struct {
 }
 
 var directRegexp = regexp.MustCompile(`^mc://(?P<host>[a-z0-9.-]+):(?P<port>\d+)/(?P<user>[a-zA-Z0-9_]{1,16})/(?P<hash>[a-fA-F0-9]{32})$`)
+
 func Direct(url string) (s Settings, err error) {
 	direct := directRegexp.FindStringSubmatch(url)
 	if direct == nil {
@@ -32,10 +33,10 @@ func Direct(url string) (s Settings, err error) {
 		return
 	}
 	s = Settings{
-		Server: auth.Server{Address: direct[1], Port: port, MpPass: direct[4]},
-		Auth: auth.NewDirect(direct[3], ""),
+		Server:  auth.Server{Address: direct[1], Port: port, MpPass: direct[4]},
+		Auth:    auth.NewDirect(direct[3], ""),
 		Trickle: 25,
-		Debug: false,
+		Debug:   false,
 	}
 	return
 }

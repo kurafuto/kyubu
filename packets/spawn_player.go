@@ -1,5 +1,7 @@
 package packets
 
+import "fmt"
+
 const SpawnPlayerSize = (ByteSize + // Packet ID
 	SByteSize + // Player ID
 	StringSize + // Player Name
@@ -85,6 +87,9 @@ func ReadSpawnPlayer(b []byte) (Packet, error) {
 }
 
 func NewSpawnPlayer(playerId int8, playerName string, x, y, z int16, yaw, pitch byte) (p *SpawnPlayer, err error) {
+	if len(playerName) > StringSize {
+		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
+	}
 	p = &SpawnPlayer{
 		PacketId:   7,
 		PlayerId:   playerId,

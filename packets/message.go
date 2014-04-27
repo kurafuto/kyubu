@@ -1,5 +1,7 @@
 package packets
 
+import "fmt"
+
 const MessageSize = (ByteSize + // Packet ID
 	SByteSize + // Player ID
 	StringSize) // Message
@@ -48,6 +50,9 @@ func ReadMessage(b []byte) (Packet, error) {
 }
 
 func NewMessage(playerId int8, message string) (p *Message, err error) {
+	if len(message) > StringSize {
+		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
+	}
 	p = &Message{
 		PacketId: 13,
 		PlayerId: playerId,
