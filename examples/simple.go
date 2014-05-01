@@ -59,7 +59,7 @@ func main() {
 			saidHello = true
 		}
 
-		packetName := packets.Packets[packet.Id()].Ident
+		packetName := packets.Packets[packet.Id()].Name
 		fmt.Printf("<-[%#.2x] %s: recv!", packet.Id(), packetName)
 	}
 }
