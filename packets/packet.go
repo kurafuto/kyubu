@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-var Endianness = binary.BigEndian
+var (
+	Endianness    = binary.BigEndian
+	AllowOverride = false // Can we replace packets?
+)
 
 // Size constants from spec, used to deduce packet size.
 const (
@@ -18,8 +21,23 @@ const (
 	BytesSize  = 1024
 )
 
+// PacketType lets us define whether packets are purely C->S, S->C or C<->S.
+// It's not an important implementation detail, but it's nice to know.
+type PacketType byte
+
+func (t PacketType) String() string {
+	if t == ServerOnly {
+		return "S->C"
+	} else if t == ClientOnly {
+		return "C->S"
+	} else if t == Both {
+		return "C<>S"
+	}
+	return "????"
+}
+
 const (
-	ServerOnly = iota
+	ServerOnly PacketType = iota
 	ClientOnly
 	Both
 )
@@ -31,109 +49,140 @@ type Packet interface {
 }
 
 type PacketInfo struct {
-	Read  func([]byte) (Packet, error)
-	Size  int
-	Type  int
-	Ident string
+	Id   byte
+	Read func([]byte) (Packet, error)
+	Size int
+	Type PacketType
+	Name string // Human presentable
 }
 
-var Packets = map[byte]PacketInfo{
-	0x00: PacketInfo{
-		Read:  ReadIdentification,
-		Size:  IdentificationSize,
-		Type:  Both,
-		Ident: "Identification",
-	},
-	0x01: PacketInfo{
-		Read:  ReadPing,
-		Size:  PingSize,
-		Type:  ServerOnly,
-		Ident: "Ping",
-	},
-	0x02: PacketInfo{
-		Read:  ReadLevelInitialize,
-		Size:  LevelInitializeSize,
-		Type:  ServerOnly,
-		Ident: "Level Initialize",
-	},
-	0x03: PacketInfo{
-		Read:  ReadLevelDataChunk,
-		Size:  LevelDataChunkSize,
-		Type:  ServerOnly,
-		Ident: "Level Data Chunk",
-	},
-	0x04: PacketInfo{
-		Read:  ReadLevelFinalize,
-		Size:  LevelFinalizeSize,
-		Type:  ServerOnly,
-		Ident: "Level Finalize",
-	},
-	0x05: PacketInfo{
-		Read:  ReadSetBlock5,
-		Size:  SetBlock5Size,
-		Type:  ClientOnly,
-		Ident: "Set Block [Client]",
-	},
-	0x06: PacketInfo{
-		Read:  ReadSetBlock6,
-		Size:  SetBlock6Size,
-		Type:  ServerOnly,
-		Ident: "Set Block [Server]",
-	},
-	0x07: PacketInfo{
-		Read:  ReadSpawnPlayer,
-		Size:  SpawnPlayerSize,
-		Type:  ServerOnly,
-		Ident: "Spawn Player",
-	},
-	0x08: PacketInfo{
-		Read:  ReadPositionOrientation,
-		Size:  PositionOrientationSize,
-		Type:  Both,
-		Ident: "Position & Orientation",
-	},
-	0x09: PacketInfo{
-		Read:  ReadPositionOrientationUpdate,
-		Size:  PositionOrientationUpdateSize,
-		Type:  ServerOnly,
-		Ident: "Position & Orientation Update",
-	},
-	0x0a: PacketInfo{
-		Read:  ReadPositionUpdate,
-		Size:  PositionUpdateSize,
-		Type:  ServerOnly,
-		Ident: "Position Update",
-	},
-	0x0b: PacketInfo{
-		Read:  ReadOrientationUpdate,
-		Size:  OrientationUpdateSize,
-		Type:  ServerOnly,
-		Ident: "Orientation Update",
-	},
-	0x0c: PacketInfo{
-		Read:  ReadDespawnPlayer,
-		Size:  DespawnPlayerSize,
-		Type:  ServerOnly,
-		Ident: "Despawn Player",
-	},
-	0x0d: PacketInfo{
-		Read:  ReadMessage,
-		Size:  MessageSize,
-		Type:  Both,
-		Ident: "Message",
-	},
-	0x0e: PacketInfo{
-		Read:  ReadDisconnectPlayer,
-		Size:  DisconnectPlayerSize,
-		Type:  ServerOnly,
-		Ident: "Disconnect Player",
-	},
-	0x0f: PacketInfo{
-		Read:  ReadUpdateUserType,
-		Size:  UpdateUserTypeSize,
-		Type:  ServerOnly,
-		Ident: "Update User Type",
-	},
+type readFunc func([]byte) (Packet, error)
+
+var Packets = map[byte]*PacketInfo{}
+
+// Register allows users to register additional packets with the internal parser.
+// These packets will be recognised, parsed and sent to the parser channel.
+func Register(p *PacketInfo) (bool, error) {
+	if _, ok := Packets[p.Id]; ok && !AllowOverride {
+		return false, fmt.Errorf("Packet already registered to id %#.2x", p.Id)
+	}
+	Packets[p.Id] = p
+	return true, nil
+}
+
+func init() {
+	Register(&PacketInfo{
+		Id: 0x00,
+		Read: ReadIdentification,
+		Size: IdentificationSize,
+		Type: Both,
+		Name: "Identification",
+	})
+	Register(&PacketInfo{
+		Id: 0x01,
+		Read: ReadPing,
+		Size: PingSize,
+		Type: ServerOnly,
+		Name: "Ping",
+	})
+	Register(&PacketInfo{
+		Id: 0x02,
+		Read: ReadLevelInitialize,
+		Size: LevelInitializeSize,
+		Type: ServerOnly,
+		Name: "Level Initialize",
+	})
+	Register(&PacketInfo{
+		Id: 0x03,
+		Read: ReadLevelDataChunk,
+		Size: LevelDataChunkSize,
+		Type: ServerOnly,
+		Name: "Level Data Chunk",
+	})
+	Register(&PacketInfo{
+		Id: 0x04,
+		Read: ReadLevelFinalize,
+		Size: LevelFinalizeSize,
+		Type: ServerOnly,
+		Name: "Level Finalize",
+	})
+	Register(&PacketInfo{
+		Id: 0x05,
+		Read: ReadSetBlock5,
+		Size: SetBlock5Size,
+		Type: ClientOnly,
+		Name: "Set Block [C->S]",
+	})
+	Register(&PacketInfo{
+		Id: 0x06,
+		Read: ReadSetBlock6,
+		Size: SetBlock6Size,
+		Type: ServerOnly,
+		Name: "Set Block [S->C]",
+	})
+	Register(&PacketInfo{
+		Id: 0x07,
+		Read: ReadSpawnPlayer,
+		Size: SpawnPlayerSize,
+		Type: ServerOnly,
+		Name: "Spawn Player",
+	})
+	Register(&PacketInfo{
+		Id: 0x08,
+		Read: ReadPositionOrientation,
+		Size: PositionOrientationSize,
+		Type: Both,
+		Name: "Position/Orientation",
+	})
+	Register(&PacketInfo{
+		Id: 0x09,
+		Read: ReadPositionOrientationUpdate,
+		Size: PositionOrientationUpdateSize,
+		Type: ServerOnly,
+		Name: "Position/Orientation Update",
+	})
+	Register(&PacketInfo{
+		Id: 0x0a,
+		Read: ReadPositionUpdate,
+		Size: PositionUpdateSize,
+		Type: ServerOnly,
+		Name: "Position Update",
+	})
+	Register(&PacketInfo{
+		Id: 0x0b,
+		Read: ReadOrientationUpdate,
+		Size: OrientationUpdateSize,
+		Type: ServerOnly,
+		Name: "Orientation Update",
+	})
+	Register(&PacketInfo{
+		Id: 0x0c,
+		Read: ReadDespawnPlayer,
+		Size: DespawnPlayerSize,
+		Type: ServerOnly,
+		Name: "Despawn Player",
+	})
+	Register(&PacketInfo{
+		Id: 0x0d,
+		Read: ReadMessage,
+		Size: MessageSize,
+		Type: Both,
+		Name: "Message",
+	})
+	Register(&PacketInfo{
+		Id: 0x0e,
+		Read: ReadDisconnectPlayer,
+		Size: DisconnectPlayerSize,
+		Type: ServerOnly,
+		Name: "Disconnect Player",
+	})
+	Register(&PacketInfo{
+		Id: 0x0f,
+		Read: ReadUpdateUserType,
+		Size: UpdateUserTypeSize,
+		Type: ServerOnly,
+		Name: "Update User Type",
+	})
 }
 
 // PacketWrapper wraps an array of bytes into a bytes.Buffer, and exposes
@@ -143,8 +192,6 @@ type PacketWrapper struct {
 	Buffer *bytes.Buffer
 	Strip  bool
 }
-
-// Write functions - append data to the buffer.
 
 func (p *PacketWrapper) WriteByte(b byte) error {
 	return binary.Write(p.Buffer, Endianness, &b)
@@ -176,8 +223,6 @@ func (p *PacketWrapper) WriteBytes(b []byte) error {
 	b = append(b, bytes.Repeat([]byte{0}, BytesSize-len(b))...)
 	return binary.Write(p.Buffer, Endianness, &b)
 }
-
-// Read functions - read data out of the buffer.
 
 func (p *PacketWrapper) ReadByte() (i byte, err error) {
 	b := make([]byte, 1)
