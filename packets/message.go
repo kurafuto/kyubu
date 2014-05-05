@@ -12,41 +12,22 @@ type Message struct {
 	Message  string
 }
 
-func (p *Message) Id() byte {
+func (p Message) Id() byte {
 	return p.PacketId
 }
 
-func (p *Message) Size() int {
+func (p Message) Size() int {
 	return MessageSize
 }
 
-func (p *Message) Bytes() []byte {
-	raw := NewPacketWrapper([]byte{})
-	raw.WriteByte(p.PacketId)
-	raw.WriteSByte(p.PlayerId)
-	raw.WriteString(p.Message)
-	return raw.Buffer.Bytes()
+func (p Message) Bytes() []byte {
+	return ReflectBytes(p)
 }
 
 func ReadMessage(b []byte) (Packet, error) {
-	p := Message{}
-	raw := NewPacketWrapper(b)
-	if packetId, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PacketId = packetId
-	}
-	if playerId, err := raw.ReadSByte(); err != nil {
-		return nil, err
-	} else {
-		p.PlayerId = playerId
-	}
-	if message, err := raw.ReadString(); err != nil {
-		return nil, err
-	} else {
-		p.Message = message
-	}
-	return &p, nil
+	var p Message
+	err := ReflectRead(b, &p)
+	return &p, err
 }
 
 func NewMessage(playerId int8, message string) (p *Message, err error) {
@@ -54,7 +35,7 @@ func NewMessage(playerId int8, message string) (p *Message, err error) {
 		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
 	}
 	p = &Message{
-		PacketId: 13,
+		PacketId: 0x0d,
 		PlayerId: playerId,
 		Message:  message,
 	}

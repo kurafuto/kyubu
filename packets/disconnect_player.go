@@ -8,40 +8,27 @@ type DisconnectPlayer struct {
 	Reason   string
 }
 
-func (p *DisconnectPlayer) Id() byte {
+func (p DisconnectPlayer) Id() byte {
 	return p.PacketId
 }
 
-func (p *DisconnectPlayer) Size() int {
+func (p DisconnectPlayer) Size() int {
 	return DisconnectPlayerSize
 }
 
-func (p *DisconnectPlayer) Bytes() []byte {
-	raw := NewPacketWrapper([]byte{})
-	raw.WriteByte(p.PacketId)
-	raw.WriteString(p.Reason)
-	return raw.Buffer.Bytes()
+func (p DisconnectPlayer) Bytes() []byte {
+	return ReflectBytes(p)
 }
 
 func ReadDisconnectPlayer(b []byte) (Packet, error) {
-	p := DisconnectPlayer{}
-	raw := NewPacketWrapper(b)
-	if packetId, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PacketId = packetId
-	}
-	if reason, err := raw.ReadString(); err != nil {
-		return nil, err
-	} else {
-		p.Reason = reason
-	}
-	return &p, nil
+	var p DisconnectPlayer
+	err := ReflectRead(b, &p)
+	return &p, err
 }
 
 func NewDisconnectPlayer(reason string) (p *DisconnectPlayer, err error) {
 	p = &DisconnectPlayer{
-		PacketId: 14,
+		PacketId: 0x0e,
 		Reason:   reason,
 	}
 	return

@@ -17,59 +17,22 @@ type SetBlock5 struct {
 	Mode, BlockType byte
 }
 
-func (p *SetBlock5) Id() byte {
+func (p SetBlock5) Id() byte {
 	return p.PacketId
 }
 
-func (p *SetBlock5) Size() int {
+func (p SetBlock5) Size() int {
 	return SetBlock5Size
 }
 
-func (p *SetBlock5) Bytes() []byte {
-	raw := NewPacketWrapper([]byte{})
-	raw.WriteByte(p.PacketId)
-	raw.WriteShort(p.X)
-	raw.WriteShort(p.Y)
-	raw.WriteShort(p.Z)
-	raw.WriteByte(p.Mode)
-	raw.WriteByte(p.BlockType)
-	return raw.Buffer.Bytes()
+func (p SetBlock5) Bytes() []byte {
+	return ReflectBytes(p)
 }
 
 func ReadSetBlock5(b []byte) (Packet, error) {
-	p := SetBlock5{}
-	raw := NewPacketWrapper(b)
-	if packetId, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PacketId = packetId
-	}
-	if x, err := raw.ReadShort(); err != nil {
-		return nil, err
-	} else {
-		p.X = x
-	}
-	if y, err := raw.ReadShort(); err != nil {
-		return nil, err
-	} else {
-		p.Y = y
-	}
-	if z, err := raw.ReadShort(); err != nil {
-		return nil, err
-	} else {
-		p.Z = z
-	}
-	if mode, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.Mode = mode
-	}
-	if blockType, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.BlockType = blockType
-	}
-	return &p, nil
+	var p SetBlock5
+	err := ReflectRead(b, &p)
+	return &p, err
 }
 
 func NewSetBlock5(x, y, z int16, mode, blockType byte) (p *SetBlock5, err error) {
@@ -77,7 +40,7 @@ func NewSetBlock5(x, y, z int16, mode, blockType byte) (p *SetBlock5, err error)
 		return nil, errors.New("kyubu/packets: SetBlock mode must be 0x00 or 0x01")
 	}
 	p = &SetBlock5{
-		PacketId:  5,
+		PacketId:  0x05,
 		X:         x,
 		Y:         y,
 		Z:         z,

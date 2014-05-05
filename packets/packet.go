@@ -72,112 +72,112 @@ func Register(p *PacketInfo) (bool, error) {
 
 func init() {
 	Register(&PacketInfo{
-		Id: 0x00,
+		Id:   0x00,
 		Read: ReadIdentification,
 		Size: IdentificationSize,
 		Type: Both,
 		Name: "Identification",
 	})
 	Register(&PacketInfo{
-		Id: 0x01,
+		Id:   0x01,
 		Read: ReadPing,
 		Size: PingSize,
 		Type: ServerOnly,
 		Name: "Ping",
 	})
 	Register(&PacketInfo{
-		Id: 0x02,
+		Id:   0x02,
 		Read: ReadLevelInitialize,
 		Size: LevelInitializeSize,
 		Type: ServerOnly,
 		Name: "Level Initialize",
 	})
 	Register(&PacketInfo{
-		Id: 0x03,
+		Id:   0x03,
 		Read: ReadLevelDataChunk,
 		Size: LevelDataChunkSize,
 		Type: ServerOnly,
 		Name: "Level Data Chunk",
 	})
 	Register(&PacketInfo{
-		Id: 0x04,
+		Id:   0x04,
 		Read: ReadLevelFinalize,
 		Size: LevelFinalizeSize,
 		Type: ServerOnly,
 		Name: "Level Finalize",
 	})
 	Register(&PacketInfo{
-		Id: 0x05,
+		Id:   0x05,
 		Read: ReadSetBlock5,
 		Size: SetBlock5Size,
 		Type: ClientOnly,
 		Name: "Set Block [C->S]",
 	})
 	Register(&PacketInfo{
-		Id: 0x06,
+		Id:   0x06,
 		Read: ReadSetBlock6,
 		Size: SetBlock6Size,
 		Type: ServerOnly,
 		Name: "Set Block [S->C]",
 	})
 	Register(&PacketInfo{
-		Id: 0x07,
+		Id:   0x07,
 		Read: ReadSpawnPlayer,
 		Size: SpawnPlayerSize,
 		Type: ServerOnly,
 		Name: "Spawn Player",
 	})
 	Register(&PacketInfo{
-		Id: 0x08,
+		Id:   0x08,
 		Read: ReadPositionOrientation,
 		Size: PositionOrientationSize,
 		Type: Both,
 		Name: "Position/Orientation",
 	})
 	Register(&PacketInfo{
-		Id: 0x09,
+		Id:   0x09,
 		Read: ReadPositionOrientationUpdate,
 		Size: PositionOrientationUpdateSize,
 		Type: ServerOnly,
 		Name: "Position/Orientation Update",
 	})
 	Register(&PacketInfo{
-		Id: 0x0a,
+		Id:   0x0a,
 		Read: ReadPositionUpdate,
 		Size: PositionUpdateSize,
 		Type: ServerOnly,
 		Name: "Position Update",
 	})
 	Register(&PacketInfo{
-		Id: 0x0b,
+		Id:   0x0b,
 		Read: ReadOrientationUpdate,
 		Size: OrientationUpdateSize,
 		Type: ServerOnly,
 		Name: "Orientation Update",
 	})
 	Register(&PacketInfo{
-		Id: 0x0c,
+		Id:   0x0c,
 		Read: ReadDespawnPlayer,
 		Size: DespawnPlayerSize,
 		Type: ServerOnly,
 		Name: "Despawn Player",
 	})
 	Register(&PacketInfo{
-		Id: 0x0d,
+		Id:   0x0d,
 		Read: ReadMessage,
 		Size: MessageSize,
 		Type: Both,
 		Name: "Message",
 	})
 	Register(&PacketInfo{
-		Id: 0x0e,
+		Id:   0x0e,
 		Read: ReadDisconnectPlayer,
 		Size: DisconnectPlayerSize,
 		Type: ServerOnly,
 		Name: "Disconnect Player",
 	})
 	Register(&PacketInfo{
-		Id: 0x0f,
+		Id:   0x0f,
 		Read: ReadUpdateUserType,
 		Size: UpdateUserTypeSize,
 		Type: ServerOnly,

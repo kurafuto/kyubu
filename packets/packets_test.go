@@ -49,6 +49,10 @@ func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, 
 	if p.Size() != read.Size() {
 		t.Fatalf("original packet size %d != recreated size %d", p.Size(), read.Size())
 	}
+	t.Logf("ReflectSize(p) = %d %#v", ReflectSize(p), p)
+	if ReflectSize(p) != p.Size() {
+		t.Fatalf("calculated ReflectSize %d != original size %d", ReflectSize(p), p.Size())
+	}
 
 	if !reflect.DeepEqual(p, read) {
 		t.Fatalf("original packet does not equal recreated packet: %#v %#v", p, read)

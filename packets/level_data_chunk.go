@@ -12,53 +12,24 @@ type LevelDataChunk struct {
 	ChunkLength     int16
 	ChunkData       []byte
 	PercentComplete byte
-	// Not packed, flag indicating whether implementations have
-	// internally handled this packet before pushing it through.
-	Handled bool
 }
 
-func (p *LevelDataChunk) Id() byte {
+func (p LevelDataChunk) Id() byte {
 	return p.PacketId
 }
 
-func (p *LevelDataChunk) Size() int {
+func (p LevelDataChunk) Size() int {
 	return LevelDataChunkSize
 }
 
-func (p *LevelDataChunk) Bytes() []byte {
-	raw := NewPacketWrapper([]byte{})
-	raw.WriteByte(p.PacketId)
-	raw.WriteShort(p.ChunkLength)
-	raw.WriteBytes(p.ChunkData)
-	raw.WriteByte(p.PercentComplete)
-	return raw.Buffer.Bytes()
+func (p LevelDataChunk) Bytes() []byte {
+	return ReflectBytes(p)
 }
 
 func ReadLevelDataChunk(b []byte) (Packet, error) {
-	p := LevelDataChunk{}
-	raw := NewPacketWrapper(b)
-	if packetId, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PacketId = packetId
-	}
-	if chunkLength, err := raw.ReadShort(); err != nil {
-		return nil, err
-	} else {
-		p.ChunkLength = chunkLength
-	}
-	if chunkData, err := raw.ReadBytes(); err != nil {
-		return nil, err
-	} else {
-		// TODO: decompress gzip
-		p.ChunkData = chunkData
-	}
-	if percentComplete, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PercentComplete = percentComplete
-	}
-	return &p, nil
+	var p LevelDataChunk
+	err := ReflectRead(b, &p)
+	return &p, err
 }
 
 func NewLevelDataChunk(chunkData []byte, percentComplete byte) (p *LevelDataChunk, err error) {
@@ -66,11 +37,10 @@ func NewLevelDataChunk(chunkData []byte, percentComplete byte) (p *LevelDataChun
 		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes", BytesSize)
 	}
 	p = &LevelDataChunk{
-		PacketId:        3,
+		PacketId:        0x03,
 		ChunkLength:     int16(len(chunkData)),
 		ChunkData:       chunkData,
 		PercentComplete: percentComplete,
-		Handled:         false,
 	}
 	return
 }
