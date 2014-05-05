@@ -24,6 +24,9 @@ additional packets with the parser. For example, here's how you'd implement the
 __ExtInfo__ packet from the [Classic Protocol Extension](http://wiki.vg/Classic_Protocol_Extension#ExtInfo_Packet):
 
 ```go
+// Apologies if this is outdated/doesn't work. Check packets/identification.go
+// for a simple /always working/ example.
+
 package main
 
 import (
@@ -39,43 +42,22 @@ type ExtInfo struct {
 	ExtensionCount int16 // short
 }
 
-func (p *ExtInfo) Id() byte {
+func (p ExtInfo) Id() byte {
 	return p.PacketId
 }
 
-func (p *ExtInfo) Size() int {
+func (p ExtInfo) Size() int {
 	return ExtInfoSize
 }
 
-func (p *ExtInfo) Bytes() []byte {
-	// Use the lovely packets.PacketWrapper.
-	raw := packets.NewPacketWrapper([]byte{})
-	raw.WriteByte(p.PacketId)
-	raw.WriteString(p.AppName)
-	raw.WriteShort(p.ExtensionCount)
-	return raw.Buffer.Bytes()
+func (p ExtInfo) Bytes() []byte {
+	return packets.ReflectBytes(p)
 }
 
 func ReadExtInfo(b []byte) (packets.Packet, error) {
-	// This is kind of boilerplate, but it's just how it's done, sorry!
-	p := ExtInfo{}
-	raw := packets.NewPacketWrapper(b)
-	if packetId, err := raw.ReadByte(); err != nil {
-		return nil, err
-	} else {
-		p.PacketId = packetId
-	}
-	if appName, err := raw.ReadString(); err != nil {
-		return nil, err
-	} else {
-		p.AppName = appName
-	}
-	if extCount, err := raw.ReadShort(); err != nil {
-		return nil, err
-	} else {
-		p.ExtensionCount = extCount
-	}
-	return &p, nil
+	var p ExtInfo
+	err := packets.ReflectRead(b, &p)
+	return &p, err
 }
 
 func NewExtInfo(appName string, extCount int16) (p *ExtInfo, err error) {
