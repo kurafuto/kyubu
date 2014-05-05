@@ -30,7 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	settings := kyubu.Settings{
+	settings := client.Settings{
 		Server:  servers[0],
 		Auth:    auth,
 		Trickle: 25,
@@ -39,27 +39,27 @@ func main() {
 
 	//// Create a new client with the settings
 
-	k, err := client.New(settings)
+	c, err := client.New(settings)
 	if err != nil {
 		panic(err)
 	}
 
 	saidHello := false
 	for {
-		packet := <-k.In
+		packet := <-c.In
 		if packet == nil {
 			// Server disconnect, etc.
 			break
 		}
 
-		if !saidHello && k.LoggedIn {
+		if !saidHello && c.LoggedIn {
 			// You should check the error for new packets, but this is just an example.
 			mesg, _ := packets.NewMessage(127, "Hello, world!")
-			k.Out <- mesg
+			c.Out <- mesg
 			saidHello = true
 		}
 
 		packetName := packets.Packets[packet.Id()].Name
-		fmt.Printf("<-[%#.2x] %s: recv!", packet.Id(), packetName)
+		fmt.Printf("<-[%#.2x] %s: recv!\n", packet.Id(), packetName)
 	}
 }

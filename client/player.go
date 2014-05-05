@@ -1,5 +1,7 @@
 package client
 
+import "github.com/sysr-q/kyubu/packets"
+
 type Player struct {
 	Id              int8
 	Name            string
@@ -18,4 +20,14 @@ func (p *Player) Teleport(loc *Loc) {
 type Loc struct {
 	X, Y, Z    int16
 	Yaw, Pitch byte
+}
+
+func POLoc(p *packets.PositionOrientation) *Loc {
+	return &Loc{
+		X:     p.X,
+		Y:     p.Y,
+		Z:     p.Z,
+		Yaw:   p.Yaw,
+		Pitch: p.Pitch,
+	}
 }
