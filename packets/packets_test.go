@@ -61,7 +61,7 @@ func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, 
 
 func TestIdentification(t *testing.T) {
 	testPacketReencode(NewIdentification, ReadIdentification, t, false, "test", "test")
-	testPacketReencode(NewIdentification, ReadIdentification, t, true, strings.Repeat("t", 65), "test")
+	testPacketReencode(NewIdentification, ReadIdentification, t, true, strings.Repeat("t", StringSize+1), "test")
 }
 
 func TestPing(t *testing.T) {
@@ -75,7 +75,7 @@ func TestLevelInitialize(t *testing.T) {
 func TestLevelDataChunk(t *testing.T) {
 	data := bytes.Repeat([]byte{0x01}, 512)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, false, data, byte(25))
-	data = bytes.Repeat([]byte{0x01}, 1025)
+	data = bytes.Repeat([]byte{0x01}, BytesSize+1)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, true, data, byte(25))
 }
 
@@ -95,7 +95,7 @@ func TestSetBlock6(t *testing.T) {
 func TestSpawnPlayer(t *testing.T) {
 	v := []interface{}{int8(1), "Notch", int16(64), int16(32), int16(64), byte(0), byte(0)}
 	testPacketReencode(NewSpawnPlayer, ReadSpawnPlayer, t, false, v...)
-	v = []interface{}{int8(1), strings.Repeat("t", 66), int16(64), int16(32), int16(64), byte(0), byte(0)}
+	v = []interface{}{int8(1), strings.Repeat("t", StringSize+1), int16(64), int16(32), int16(64), byte(0), byte(0)}
 	testPacketReencode(NewSpawnPlayer, ReadSpawnPlayer, t, true, v...)
 }
 
@@ -125,7 +125,7 @@ func TestDespawnPlayer(t *testing.T) {
 
 func TestMessage(t *testing.T) {
 	testPacketReencode(NewMessage, ReadMessage, t, false, int8(1), "Hello, world!")
-	testPacketReencode(NewMessage, ReadMessage, t, true, int8(1), strings.Repeat("t", 65))
+	testPacketReencode(NewMessage, ReadMessage, t, true, int8(1), strings.Repeat("t", StringSize+1))
 }
 
 func TestDisconnectPlayer(t *testing.T) {

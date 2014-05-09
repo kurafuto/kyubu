@@ -19,6 +19,8 @@ func ReflectBytes(p Packet) []byte {
 			b.WriteSByte(int8(v.Int()))
 		case reflect.Int16: // short
 			b.WriteShort(int16(v.Int()))
+		case reflect.Int32: // int
+			b.WriteInt(int32(v.Int()))
 		case reflect.String: // string
 			b.WriteString(v.String())
 		case reflect.Slice: // []byte
@@ -51,6 +53,12 @@ func ReflectRead(b []byte, v Packet) error {
 			}
 		case reflect.Int16: // short
 			if val, err := buf.ReadShort(); err != nil {
+				return err
+			} else {
+				v.SetInt(int64(val))
+			}
+		case reflect.Int32: // int
+			if val, err := buf.ReadInt(); err != nil {
 				return err
 			} else {
 				v.SetInt(int64(val))
@@ -89,6 +97,8 @@ func ReflectSize(p Packet) (size int) {
 			size += SByteSize
 		case reflect.Int16: // short
 			size += ShortSize
+		case reflect.Int32: // int
+			size += IntSize
 		case reflect.String: // string
 			size += StringSize
 		case reflect.Slice: // []byte

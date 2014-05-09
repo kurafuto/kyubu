@@ -6,6 +6,8 @@ import (
 	"github.com/sysr-q/kyubu/auth"
 	"github.com/sysr-q/kyubu/chunk"
 	"github.com/sysr-q/kyubu/packets"
+	"github.com/dchest/uniuri"
+	"errors"
 	"net"
 	"time"
 )
@@ -17,7 +19,7 @@ type Settings struct {
 	Debug   bool
 }
 
-type Handler func(packets.Packet) error
+type Handler func(*Client, packets.Packet) error
 type State int
 
 const (
@@ -26,6 +28,11 @@ const (
 	ChunkLoad
 	Spawning
 	Idle
+)
+
+var (
+	ErrNoPacket = errors.New("kyubu: No such packet")
+	ErrNotRegistered = errors.New("kyubu: Nothing registered under handler id")
 )
 
 type Client struct {
@@ -37,6 +44,8 @@ type Client struct {
 	In      chan packets.Packet // S->C
 	pIn     chan packets.Packet // S->C (internal)
 	qTicker *time.Ticker
+
+	handlers map[packets.Packet]map[string]Handler
 
 	quit bool
 
@@ -51,6 +60,29 @@ type Client struct {
 
 	State    State
 	LoggedIn bool
+}
+
+func (c *Client) Register(p packets.Packet, handler Handler) (string, error) {
+	id := uniuri.NewLen(8)
+	if _, ok := packets.Packets[p.Id()]; !ok {
+		return "", ErrNoPacket
+	}
+	if _, ok := c.handlers[p]; !ok {
+		c.handlers[p] = make(map[string]Handler)
+	}
+	c.handlers[p][id] = handler
+	return id, nil
+}
+
+func (c *Client) Unregister(p packets.Packet, id string) error {
+	if _, ok := c.handlers[p]; !ok {
+		return ErrNoPacket
+	}
+	if _, ok := c.handlers[p][id]; !ok {
+		return ErrNotRegistered
+	}
+	delete(c.handlers[p], id)
+	return nil
 }
 
 func (c *Client) Debugf(s string, v ...interface{}) {
@@ -290,6 +322,8 @@ func New(settings Settings) (c *Client, err error) {
 		In:      make(chan packets.Packet),
 		pIn:     make(chan packets.Packet),
 		qTicker: time.NewTicker(settings.Trickle * time.Millisecond),
+
+		handlers: make(map[packets.Packet]map[string]Handler),
 
 		Player:  &Player{Id: -1, Name: settings.Auth.Username()},
 		Players: make(map[int8]*Player),

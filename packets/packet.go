@@ -17,6 +17,7 @@ const (
 	ByteSize   = 1
 	SByteSize  = 1
 	ShortSize  = 2
+	IntSize    = 4
 	StringSize = 64
 	BytesSize  = 1024
 )
@@ -68,6 +69,18 @@ func Register(p *PacketInfo) (bool, error) {
 	}
 	Packets[p.Id] = p
 	return true, nil
+}
+
+// MustRegister is functionally the same as Register, however if an error is
+// returned, or the registration fails for whatever reason, it will panic.
+func MustRegister(p *PacketInfo) {
+	ok, err := Register(p)
+	if err != nil {
+		panic(err)
+	}
+	if !ok {
+		panic(fmt.Errorf("kyubu/packets: Registration of new packet %#.2x failed", p.Id))
+	}
 }
 
 func init() {
@@ -205,6 +218,10 @@ func (p *PacketWrapper) WriteShort(i int16) error {
 	return binary.Write(p.Buffer, Endianness, &i)
 }
 
+func (p *PacketWrapper) WriteInt(i int32) error {
+	return binary.Write(p.Buffer, Endianness, &i)
+}
+
 func (p *PacketWrapper) WriteString(s string) error {
 	if len(s) > StringSize {
 		return fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
@@ -240,6 +257,11 @@ func (p *PacketWrapper) ReadSByte() (i int8, err error) {
 }
 
 func (p *PacketWrapper) ReadShort() (i int16, err error) {
+	err = binary.Read(p.Buffer, Endianness, &i)
+	return
+}
+
+func (p *PacketWrapper) ReadInt() (i int32, err error) {
 	err = binary.Read(p.Buffer, Endianness, &i)
 	return
 }
