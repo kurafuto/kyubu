@@ -78,7 +78,7 @@ func ReflectRead(b []byte, v Packet) error {
 		}
 	}
 	if buf.Buffer.Len() != 0 {
-		fmt.Printf("expected 0 leftover, had %d\n", buf.Buffer.Len())
+		fmt.Printf("kyubu: ReflectRead(): expected 0 leftover, had %d\n", buf.Buffer.Len())
 		//return fmt.Errorf("kyubu: expected 0 leftover bytes, but had %d", buf.Buffer.Len())
 	}
 	return nil
