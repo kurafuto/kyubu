@@ -1,4 +1,4 @@
-// Packeg cpe implements all of the Classic Protocol Extension packets in the
+// Package cpe implements all of the Classic Protocol Extension packets in the
 // official CPE spec.
 package cpe
 

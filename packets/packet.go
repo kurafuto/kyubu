@@ -1,3 +1,5 @@
+// Package packets contains the necessary magic to create, parse, serialize and
+// register Minecraft packets.
 package packets
 
 import (

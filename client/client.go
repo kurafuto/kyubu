@@ -1,3 +1,5 @@
+// Package client contains a (semi-functional) Minecraft client implementation,
+// which functions more like a bot than anything else.
 package client
 
 import (

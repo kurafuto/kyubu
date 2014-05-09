@@ -1,3 +1,4 @@
+// Package auth implements a few Minecraft-related authentication services.
 package auth
 
 type Server struct {
