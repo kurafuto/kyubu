@@ -76,7 +76,7 @@ func (p *parser) Next() (Packet, error) {
 	return packet, nil
 }
 
-func NewParser(r io.Reader) *parser {
+func NewParser(r io.Reader) Parser {
 	return &parser{
 		r: r,
 		//C: make(<-chan Packet),

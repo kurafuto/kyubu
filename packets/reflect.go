@@ -3,6 +3,7 @@ package packets
 import (
 	"fmt"
 	"reflect"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 // ReflectBytes uses reflection to create a byte array out of a packet.
@@ -79,7 +80,7 @@ func ReflectRead(b []byte, v Packet) error {
 	}
 	if buf.Buffer.Len() != 0 {
 		fmt.Printf("kyubu: ReflectRead(): expected 0 leftover, had %d\n", buf.Buffer.Len())
-		//return fmt.Errorf("kyubu: expected 0 leftover bytes, but had %d", buf.Buffer.Len())
+		//spew.Dump(buf.Buffer.Bytes())
 	}
 	return nil
 }

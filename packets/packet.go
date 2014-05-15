@@ -284,7 +284,16 @@ func (p *PacketWrapper) ReadString() (s string, err error) {
 
 func (p *PacketWrapper) ReadBytes() (b []byte, err error) {
 	b = make([]byte, BytesSize)
-	_, err = p.Buffer.Read(b)
+	n, err := p.Buffer.Read(b)
+	if n != BytesSize {
+		delta := BytesSize - n
+		rest := make([]byte, delta)
+		_, err = p.Buffer.Read(rest)
+		if err != nil {
+			return
+		}
+		b = append(b, rest...)
+	}
 	if p.Strip {
 		b = bytes.TrimRight(b, string([]byte{0}))
 	}
