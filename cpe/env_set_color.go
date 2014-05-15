@@ -11,7 +11,7 @@ type EnvSetColor struct {
 }
 
 func (p EnvSetColor) Id() byte {
-	return p.PacketId
+	return 0x19
 }
 
 func (p EnvSetColor) Size() int {

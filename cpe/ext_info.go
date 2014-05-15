@@ -14,7 +14,7 @@ type ExtInfo struct {
 }
 
 func (p ExtInfo) Id() byte {
-	return p.PacketId
+	return 0x10
 }
 
 func (p ExtInfo) Size() int {

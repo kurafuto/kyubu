@@ -10,7 +10,7 @@ type ExtRemovePlayerName struct {
 }
 
 func (p ExtRemovePlayerName) Id() byte {
-	return p.PacketId
+	return 0x18
 }
 
 func (p ExtRemovePlayerName) Size() int {

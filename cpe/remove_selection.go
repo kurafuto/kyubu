@@ -10,7 +10,7 @@ type RemoveSelection struct {
 }
 
 func (p RemoveSelection) Id() byte {
-	return p.PacketId
+	return 0x1b
 }
 
 func (p RemoveSelection) Size() int {

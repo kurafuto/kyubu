@@ -7,7 +7,7 @@ type Ping struct {
 }
 
 func (p Ping) Id() byte {
-	return p.PacketId
+	return 0x01
 }
 
 func (p Ping) Size() int {

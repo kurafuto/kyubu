@@ -24,7 +24,7 @@ type MakeSelection struct {
 }
 
 func (p MakeSelection) Id() byte {
-	return p.PacketId
+	return 0x1a
 }
 
 func (p MakeSelection) Size() int {

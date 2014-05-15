@@ -15,7 +15,7 @@ type SetBlock6 struct {
 }
 
 func (p SetBlock6) Id() byte {
-	return p.PacketId
+	return 0x06
 }
 
 func (p SetBlock6) Size() int {

@@ -12,7 +12,7 @@ type SetBlockPermission struct {
 }
 
 func (p SetBlockPermission) Id() byte {
-	return p.PacketId
+	return 0x1c
 }
 
 func (p SetBlockPermission) Size() int {

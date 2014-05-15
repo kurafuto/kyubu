@@ -14,7 +14,7 @@ type ChangeModel struct {
 }
 
 func (p ChangeModel) Id() byte {
-	return p.PacketId
+	return 0x1d
 }
 
 func (p ChangeModel) Size() int {

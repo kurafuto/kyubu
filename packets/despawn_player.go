@@ -9,7 +9,7 @@ type DespawnPlayer struct {
 }
 
 func (p DespawnPlayer) Id() byte {
-	return p.PacketId
+	return 0x0c
 }
 
 func (p DespawnPlayer) Size() int {

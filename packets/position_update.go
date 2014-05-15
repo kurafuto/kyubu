@@ -13,7 +13,7 @@ type PositionUpdate struct {
 }
 
 func (p PositionUpdate) Id() byte {
-	return p.PacketId
+	return 0x0a
 }
 
 func (p PositionUpdate) Size() int {

@@ -17,7 +17,7 @@ type ExtAddPlayerName struct {
 }
 
 func (p ExtAddPlayerName) Id() byte {
-	return p.PacketId
+	return 0x16
 }
 
 func (p ExtAddPlayerName) Size() int {

@@ -13,7 +13,7 @@ type Message struct {
 }
 
 func (p Message) Id() byte {
-	return p.PacketId
+	return 0x0d
 }
 
 func (p Message) Size() int {

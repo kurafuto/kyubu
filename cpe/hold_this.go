@@ -11,7 +11,7 @@ type HoldThis struct {
 }
 
 func (p HoldThis) Id() byte {
-	return p.PacketId
+	return 0x14
 }
 
 func (p HoldThis) Size() int {

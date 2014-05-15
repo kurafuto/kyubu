@@ -10,7 +10,7 @@ type CustomBlockSupportLevel struct {
 }
 
 func (p CustomBlockSupportLevel) Id() byte {
-	return p.PacketId
+	return 0x13
 }
 
 func (p CustomBlockSupportLevel) Size() int {

@@ -20,7 +20,7 @@ type SpawnPlayer struct {
 }
 
 func (p SpawnPlayer) Id() byte {
-	return p.PacketId
+	return 0x07
 }
 
 func (p SpawnPlayer) Size() int {

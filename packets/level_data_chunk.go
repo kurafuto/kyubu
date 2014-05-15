@@ -15,7 +15,7 @@ type LevelDataChunk struct {
 }
 
 func (p LevelDataChunk) Id() byte {
-	return p.PacketId
+	return 0x03
 }
 
 func (p LevelDataChunk) Size() int {

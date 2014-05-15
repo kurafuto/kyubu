@@ -16,7 +16,7 @@ type PositionOrientationUpdate struct {
 }
 
 func (p PositionOrientationUpdate) Id() byte {
-	return p.PacketId
+	return 0x09
 }
 
 func (p PositionOrientationUpdate) Size() int {

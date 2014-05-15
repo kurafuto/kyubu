@@ -9,7 +9,7 @@ type UpdateUserType struct {
 }
 
 func (p UpdateUserType) Id() byte {
-	return p.PacketId
+	return 0x0f
 }
 
 func (p UpdateUserType) Size() int {

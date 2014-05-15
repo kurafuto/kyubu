@@ -17,7 +17,7 @@ type Identification struct {
 }
 
 func (p Identification) Id() byte {
-	return p.PacketId
+	return 0x00
 }
 
 func (p Identification) Size() int {

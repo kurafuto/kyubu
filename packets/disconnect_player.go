@@ -9,7 +9,7 @@ type DisconnectPlayer struct {
 }
 
 func (p DisconnectPlayer) Id() byte {
-	return p.PacketId
+	return 0x0e
 }
 
 func (p DisconnectPlayer) Size() int {

@@ -15,7 +15,7 @@ type ExtAddEntity struct {
 }
 
 func (p ExtAddEntity) Id() byte {
-	return p.PacketId
+	return 0x17
 }
 
 func (p ExtAddEntity) Size() int {

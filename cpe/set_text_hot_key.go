@@ -16,7 +16,7 @@ type SetTextHotKey struct {
 }
 
 func (p SetTextHotKey) Id() byte {
-	return p.PacketId
+	return 0x15
 }
 
 func (p SetTextHotKey) Size() int {

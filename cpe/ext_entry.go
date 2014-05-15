@@ -14,7 +14,7 @@ type ExtEntry struct {
 }
 
 func (p ExtEntry) Id() byte {
-	return p.PacketId
+	return 0x11
 }
 
 func (p ExtEntry) Size() int {

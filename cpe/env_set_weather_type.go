@@ -10,7 +10,7 @@ type EnvSetWeatherType struct {
 }
 
 func (p EnvSetWeatherType) Id() byte {
-	return p.PacketId
+	return 0x1f
 }
 
 func (p EnvSetWeatherType) Size() int {

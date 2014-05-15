@@ -7,7 +7,7 @@ type LevelInitialize struct {
 }
 
 func (p LevelInitialize) Id() byte {
-	return p.PacketId
+	return 0x01
 }
 
 func (p LevelInitialize) Size() int {

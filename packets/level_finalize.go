@@ -11,7 +11,7 @@ type LevelFinalize struct {
 }
 
 func (p LevelFinalize) Id() byte {
-	return p.PacketId
+	return 0x04
 }
 
 func (p LevelFinalize) Size() int {

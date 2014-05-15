@@ -10,7 +10,7 @@ type SetClickDistance struct {
 }
 
 func (p SetClickDistance) Id() byte {
-	return p.PacketId
+	return 0x12
 }
 
 func (p SetClickDistance) Size() int {

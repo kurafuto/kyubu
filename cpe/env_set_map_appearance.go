@@ -16,7 +16,7 @@ type EnvSetMapAppearance struct {
 }
 
 func (p EnvSetMapAppearance) Id() byte {
-	return p.PacketId
+	return 0x1e
 }
 
 func (p EnvSetMapAppearance) Size() int {

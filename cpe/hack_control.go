@@ -15,7 +15,7 @@ type HackControl struct {
 }
 
 func (p HackControl) Id() byte {
-	return p.PacketId
+	return 0x20
 }
 
 func (p HackControl) Size() int {
