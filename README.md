@@ -19,12 +19,12 @@ same script I use to test - that will always have a working example.
 ## Enabling the CPE
 
 If you'd like to make the Kyubu packet parser CPE-aware, it's easy! All you have
-to do is `import "github.com/sysr-q/kyubu/cpe`. That's it. Really!
+to do is `import "github.com/sysr-q/kyubu/cpe"`. That's it. Really!
 
 `kyubu/cpe` will register all of the packets it implements, so you don't have to
 do anything funky to get it to work with `kyubu/packets.Parser`.
 
-`kyubu/cpe/proposals` is the same - import it and it'll register all recognise
+`kyubu/cpe/proposals` is the same - import it and it'll register all known proposal
 packets. Careful with this one though, it might be out of date or somehow broken.
 
 ## Extending Kyubu
@@ -39,10 +39,10 @@ For a working examples, see `kyubu/packets/identification.go` and perhaps
 The general idea is this:
 
 1. Create a type that implements the `kyubu/packets.Packet` interface.
-	* or `kyubu/cpe.ExtPacket` for CPE related packets.
-	* `kyubu/packets` has a handy `ReflectBytes(Packet)` helper for adding `Bytes()`.
+    * (`kyubu/cpe.ExtPacket` for CPE related packets)
+    * `kyubu/packets` has a handy `ReflectBytes(Packet)` helper for adding `Bytes()`.
 2. Make a function to create the packet from a `[]byte` and return the packet.
-	* `kyubu/packets` has a handy `ReflectRead([]byte, *Packet)` helper for this.
+    * `kyubu/packets` has a handy `ReflectRead([]byte, *Packet)` helper for this.
 3. Make a function to create a fresh packet from scratch.
 4. In your file's `init()` method, `Register()` the packet with a `packets.PacketInfo{}`.
 5. Write some tests to ensure your packet works as intended (and preferably won't
@@ -53,7 +53,7 @@ __Hints:__
 * The `Register()` function returns a `(bool, error)` tuple, explaining whether
   your packet registration was successful, and if not, why it failed.
 * There's `MustRegister()`, which is exactly the same as Register, but will
-  panic if registration fails for whatever reason. `kyubu/cpe` uses this.
+  panic if registration fails for whatever reason. Kyubu uses this internally.
 * Want to override existing packets? Set `kyubu/packets.AllowOverride` to `true`.
   You'll then be able to replace existing packets via the `Register()` function.
 
