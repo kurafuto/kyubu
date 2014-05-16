@@ -5,14 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const MakeSelectionSize = (packets.ByteSize +
-	packets.ByteSize +
-	packets.StringSize +
-	packets.ShortSize + packets.ShortSize + packets.ShortSize +
-	packets.ShortSize + packets.ShortSize + packets.ShortSize +
-	packets.ShortSize + packets.ShortSize + packets.ShortSize +
-	packets.ShortSize)
-
 type MakeSelection struct {
 	PacketId               byte
 	SelectionId            byte
@@ -28,7 +20,7 @@ func (p MakeSelection) Id() byte {
 }
 
 func (p MakeSelection) Size() int {
-	return MakeSelectionSize
+	return packets.ReflectSize(p)
 }
 
 func (p MakeSelection) Bytes() []byte {
@@ -71,7 +63,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1a,
 		Read: ReadMakeSelection,
-		Size: MakeSelectionSize,
+		Size: packets.ReflectSize(&MakeSelection{}),
 		Type: packets.ServerOnly,
 		Name: "Make Selection (CPE)",
 	})

@@ -1,7 +1,5 @@
 package packets
 
-const PingSize = ByteSize // Packet ID
-
 type Ping struct {
 	PacketId byte
 }
@@ -11,7 +9,7 @@ func (p Ping) Id() byte {
 }
 
 func (p Ping) Size() int {
-	return PingSize
+	return ReflectSize(p)
 }
 
 func (p Ping) Bytes() []byte {
@@ -27,4 +25,14 @@ func ReadPing(b []byte) (Packet, error) {
 func NewPing() (p *Ping, err error) {
 	p = &Ping{PacketId: 0x01}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x01,
+		Read: ReadPing,
+		Size: ReflectSize(&Ping{}),
+		Type: ServerOnly,
+		Name: "Ping",
+	})
 }

@@ -1,8 +1,5 @@
 package packets
 
-const UpdateUserTypeSize = (ByteSize + // Packet ID
-	ByteSize) // User type
-
 type UpdateUserType struct {
 	PacketId byte
 	UserType byte
@@ -13,7 +10,7 @@ func (p UpdateUserType) Id() byte {
 }
 
 func (p UpdateUserType) Size() int {
-	return UpdateUserTypeSize
+	return ReflectSize(p)
 }
 
 func (p UpdateUserType) Bytes() []byte {
@@ -32,4 +29,14 @@ func NewUpdateUserType(userType byte) (p *UpdateUserType, err error) {
 		UserType: userType,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x0f,
+		Read: ReadUpdateUserType,
+		Size: ReflectSize(&UpdateUserType{}),
+		Type: ServerOnly,
+		Name: "Update User Type",
+	})
 }

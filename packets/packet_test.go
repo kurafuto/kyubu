@@ -39,6 +39,17 @@ func TestWriteShort(t *testing.T) {
 	}
 }
 
+func TestWriteint(t *testing.T) {
+	b := bytes.NewBuffer([]byte{})
+	pw := PacketWrapper{Buffer: b, Strip: true}
+	if err := pw.WriteInt(0); err != nil {
+		t.Fatal("expected nil err, got", err)
+	}
+	if !bytes.Equal(b.Bytes(), []byte{0x00, 0x00, 0x00, 0x00}) {
+		t.Fatalf("expected {0x00, 0x00, 0x00, 0x00}, got %#v", b.Bytes())
+	}
+}
+
 func TestWriteString(t *testing.T) {
 	b := bytes.NewBuffer([]byte{})
 	pw := PacketWrapper{Buffer: b, Strip: true}
@@ -106,6 +117,18 @@ func TestReadShort(t *testing.T) {
 	}
 	if i != int16(0) {
 		t.Fatalf("expected int16(0), got %v", i)
+	}
+}
+
+func TestReadInt(t *testing.T) {
+	b := bytes.NewBuffer([]byte{0x00, 0x00, 0x00, 0x00})
+	pw := PacketWrapper{Buffer: b, Strip: true}
+	i, err := pw.ReadInt()
+	if err != nil {
+		t.Fatal("expected nil err, got", err)
+	}
+	if i != int32(0) {
+		t.Fatalf("expected int32(0), got %v", i)
 	}
 }
 

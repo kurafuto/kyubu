@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const ExtAddPlayerNameSize = (packets.ByteSize + packets.ShortSize + packets.StringSize + packets.StringSize + packets.StringSize + packets.ByteSize)
-
 type ExtAddPlayerName struct {
 	PacketId   byte
 	NameId     int16
@@ -21,7 +19,7 @@ func (p ExtAddPlayerName) Id() byte {
 }
 
 func (p ExtAddPlayerName) Size() int {
-	return ExtAddPlayerNameSize
+	return packets.ReflectSize(p)
 }
 
 func (p ExtAddPlayerName) Bytes() []byte {
@@ -57,7 +55,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x16,
 		Read: ReadExtAddPlayerName,
-		Size: ExtAddPlayerNameSize,
+		Size: packets.ReflectSize(&ExtAddPlayerName{}),
 		Type: packets.ServerOnly,
 		Name: "Ext Add Player Name (CPE)",
 	})

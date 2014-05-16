@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const HackControlSize = (packets.ByteSize + packets.ByteSize + packets.ByteSize + packets.ByteSize + packets.ByteSize + packets.ByteSize + packets.ShortSize)
-
 type HackControl struct {
 	PacketId    byte
 	Flying byte
@@ -19,7 +17,7 @@ func (p HackControl) Id() byte {
 }
 
 func (p HackControl) Size() int {
-	return HackControlSize
+	return packets.ReflectSize(p)
 }
 
 func (p HackControl) Bytes() []byte {
@@ -53,7 +51,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x20,
 		Read: ReadHackControl,
-		Size: HackControlSize,
+		Size: packets.ReflectSize(&HackControl{}),
 		Type: packets.ServerOnly,
 		Name: "Hack Control (CPE)",
 	})

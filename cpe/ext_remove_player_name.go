@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const ExtRemovePlayerNameSize = (packets.ByteSize + packets.ShortSize)
-
 type ExtRemovePlayerName struct {
 	PacketId byte
 	NameId   int16
@@ -14,7 +12,7 @@ func (p ExtRemovePlayerName) Id() byte {
 }
 
 func (p ExtRemovePlayerName) Size() int {
-	return ExtRemovePlayerNameSize
+	return packets.ReflectSize(p)
 }
 
 func (p ExtRemovePlayerName) Bytes() []byte {
@@ -43,7 +41,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x18,
 		Read: ReadExtRemovePlayerName,
-		Size: ExtRemovePlayerNameSize,
+		Size: packets.ReflectSize(&ExtRemovePlayerName{}),
 		Type: packets.ServerOnly,
 		Name: "Ext Remove Player Name (CPE)",
 	})

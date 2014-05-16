@@ -1,8 +1,5 @@
 package packets
 
-const DisconnectPlayerSize = (ByteSize + // Packet ID
-	StringSize) // Disconnect reason
-
 type DisconnectPlayer struct {
 	PacketId byte
 	Reason   string
@@ -13,7 +10,7 @@ func (p DisconnectPlayer) Id() byte {
 }
 
 func (p DisconnectPlayer) Size() int {
-	return DisconnectPlayerSize
+	return ReflectSize(p)
 }
 
 func (p DisconnectPlayer) Bytes() []byte {
@@ -32,4 +29,14 @@ func NewDisconnectPlayer(reason string) (p *DisconnectPlayer, err error) {
 		Reason:   reason,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id: 0x0e,
+		Read: ReadDisconnectPlayer,
+		Size: ReflectSize(&DisconnectPlayer{}),
+		Type: ServerOnly,
+		Name: "Disconnect Player",
+	})
 }

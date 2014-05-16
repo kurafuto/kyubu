@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const HoldThisSize = (packets.ByteSize + packets.ByteSize + packets.ByteSize)
-
 type HoldThis struct {
 	PacketId      byte
 	BlockToHold   byte
@@ -15,7 +13,7 @@ func (p HoldThis) Id() byte {
 }
 
 func (p HoldThis) Size() int {
-	return HoldThisSize
+	return packets.ReflectSize(p)
 }
 
 func (p HoldThis) Bytes() []byte {
@@ -45,7 +43,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x14,
 		Read: ReadHoldThis,
-		Size: HoldThisSize,
+		Size: packets.ReflectSize(&HoldThis{}),
 		Type: packets.ServerOnly,
 		Name: "Hold This (CPE)",
 	})

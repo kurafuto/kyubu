@@ -1,8 +1,5 @@
 package packets
 
-const DespawnPlayerSize = (ByteSize + // Packet ID
-	SByteSize) // Player ID
-
 type DespawnPlayer struct {
 	PacketId byte
 	PlayerId int8
@@ -13,7 +10,7 @@ func (p DespawnPlayer) Id() byte {
 }
 
 func (p DespawnPlayer) Size() int {
-	return DespawnPlayerSize
+	return ReflectSize(p)
 }
 
 func (p DespawnPlayer) Bytes() []byte {
@@ -32,4 +29,14 @@ func NewDespawnPlayer(playerId int8) (p *DespawnPlayer, err error) {
 		PlayerId: playerId,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id: 0x0c,
+		Read: ReadDespawnPlayer,
+		Size: ReflectSize(&DespawnPlayer{}),
+		Type: ServerOnly,
+		Name: "DespawnPlayer",
+	})
 }

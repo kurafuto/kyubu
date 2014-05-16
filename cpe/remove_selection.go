@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const RemoveSelectionSize = (packets.ByteSize + packets.ByteSize)
-
 type RemoveSelection struct {
 	PacketId    byte
 	SelectionId byte
@@ -14,7 +12,7 @@ func (p RemoveSelection) Id() byte {
 }
 
 func (p RemoveSelection) Size() int {
-	return RemoveSelectionSize
+	return packets.ReflectSize(p)
 }
 
 func (p RemoveSelection) Bytes() []byte {
@@ -43,7 +41,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1b,
 		Read: ReadRemoveSelection,
-		Size: RemoveSelectionSize,
+		Size: packets.ReflectSize(&RemoveSelection{}),
 		Type: packets.ServerOnly,
 		Name: "Remove Selection (CPE)",
 	})

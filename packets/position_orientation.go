@@ -1,13 +1,5 @@
 package packets
 
-const PositionOrientationSize = (ByteSize + // Packet ID
-	SByteSize + // Player ID
-	ShortSize + // X
-	ShortSize + // Y
-	ShortSize + // Z
-	ByteSize + // Yaw (Heading)
-	ByteSize) // Pitch
-
 type PositionOrientation struct {
 	PacketId   byte
 	PlayerId   int8
@@ -20,7 +12,7 @@ func (p PositionOrientation) Id() byte {
 }
 
 func (p PositionOrientation) Size() int {
-	return PositionOrientationSize
+	return ReflectSize(p)
 }
 
 func (p PositionOrientation) Bytes() []byte {
@@ -44,4 +36,14 @@ func NewPositionOrientation(playerId int8, x, y, z int16, yaw, pitch byte) (p *P
 		Pitch:    pitch,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x08,
+		Read: ReadPositionOrientation,
+		Size: ReflectSize(&PositionOrientation{}),
+		Type: Both,
+		Name: "Position/Orientation",
+	})
 }

@@ -1,10 +1,5 @@
 package packets
 
-const LevelFinalizeSize = (ByteSize + // Packet ID
-	ShortSize + // X Size
-	ShortSize + // Y Size
-	ShortSize) // Z Size
-
 type LevelFinalize struct {
 	PacketId byte
 	X, Y, Z  int16
@@ -15,7 +10,7 @@ func (p LevelFinalize) Id() byte {
 }
 
 func (p LevelFinalize) Size() int {
-	return LevelFinalizeSize
+	return ReflectSize(p)
 }
 
 func (p LevelFinalize) Bytes() []byte {
@@ -36,4 +31,14 @@ func NewLevelFinalize(x, y, z int16) (p *LevelFinalize, err error) {
 		Z:        z,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x04,
+		Read: ReadLevelFinalize,
+		Size: ReflectSize(&LevelFinalize{}),
+		Type: ServerOnly,
+		Name: "Level Finalize",
+	})
 }

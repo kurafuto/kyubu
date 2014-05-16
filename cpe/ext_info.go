@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const ExtInfoSize = (packets.ByteSize + packets.StringSize + packets.ShortSize)
-
 type ExtInfo struct {
 	PacketId       byte
 	AppName        string
@@ -18,7 +16,7 @@ func (p ExtInfo) Id() byte {
 }
 
 func (p ExtInfo) Size() int {
-	return ExtInfoSize
+	return packets.ReflectSize(p)
 }
 
 func (p ExtInfo) Bytes() []byte {
@@ -51,7 +49,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x10,
 		Read: ReadExtInfo,
-		Size: ExtInfoSize,
+		Size: packets.ReflectSize(&ExtInfo{}),
 		Type: packets.Both,
 		Name: "Ext Info (CPE)",
 	})

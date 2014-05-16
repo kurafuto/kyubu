@@ -2,15 +2,6 @@ package packets
 
 import "fmt"
 
-const SpawnPlayerSize = (ByteSize + // Packet ID
-	SByteSize + // Player ID
-	StringSize + // Player Name
-	ShortSize + // X
-	ShortSize + // Y
-	ShortSize + // Z
-	ByteSize + // Yaw (Heading)
-	ByteSize) // Pitch
-
 type SpawnPlayer struct {
 	PacketId   byte
 	PlayerId   int8
@@ -24,7 +15,7 @@ func (p SpawnPlayer) Id() byte {
 }
 
 func (p SpawnPlayer) Size() int {
-	return SpawnPlayerSize
+	return ReflectSize(p)
 }
 
 func (p SpawnPlayer) Bytes() []byte {
@@ -52,4 +43,14 @@ func NewSpawnPlayer(playerId int8, playerName string, x, y, z int16, yaw, pitch 
 		Pitch:      pitch,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x07,
+		Read: ReadSpawnPlayer,
+		Size: ReflectSize(&SpawnPlayer{}),
+		Type: ServerOnly,
+		Name: "Spawn Player",
+	})
 }

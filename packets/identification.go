@@ -2,12 +2,6 @@ package packets
 
 import "fmt"
 
-const IdentificationSize = (ByteSize + // Packet ID
-	ByteSize + // Protocol Version
-	StringSize + // Client: Username, Server: Server name
-	StringSize + // Client: Verification key, Server: Server MOTD
-	ByteSize) // Client: unused, Server: User type
-
 type Identification struct {
 	PacketId        byte
 	ProtocolVersion byte
@@ -21,7 +15,7 @@ func (p Identification) Id() byte {
 }
 
 func (p Identification) Size() int {
-	return IdentificationSize
+	return ReflectSize(p)
 }
 
 func (p Identification) Bytes() []byte {
@@ -46,4 +40,14 @@ func NewIdentification(name, key string) (p *Identification, err error) {
 		UserType:        0x00,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x00,
+		Read: ReadIdentification,
+		Size: ReflectSize(&Identification{}),
+		Type: Both,
+		Name: "Identification",
+	})
 }

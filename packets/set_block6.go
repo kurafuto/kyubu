@@ -1,11 +1,5 @@
 package packets
 
-const SetBlock6Size = (ByteSize + // Packet ID
-	ShortSize + // X
-	ShortSize + // Y
-	ShortSize + // Z
-	ByteSize) // Block type
-
 // SetBlock6 [0x06] is the server only Set Block packet.
 // Similar to SetBlock5 [0x05]
 type SetBlock6 struct {
@@ -19,7 +13,7 @@ func (p SetBlock6) Id() byte {
 }
 
 func (p SetBlock6) Size() int {
-	return SetBlock6Size
+	return ReflectSize(p)
 }
 
 func (p SetBlock6) Bytes() []byte {
@@ -41,4 +35,14 @@ func NewSetBlock6(x, y, z int16, blockType byte) (p *SetBlock6, err error) {
 		BlockType: blockType,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x06,
+		Read: ReadSetBlock6,
+		Size: ReflectSize(&SetBlock6{}),
+		Type: ServerOnly,
+		Name: "Set Block [S->C]",
+	})
 }

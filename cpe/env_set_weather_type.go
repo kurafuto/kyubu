@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const EnvSetWeatherTypeSize = (packets.ByteSize + packets.ByteSize)
-
 type EnvSetWeatherType struct {
 	PacketId    byte
 	WeatherType byte
@@ -14,7 +12,7 @@ func (p EnvSetWeatherType) Id() byte {
 }
 
 func (p EnvSetWeatherType) Size() int {
-	return EnvSetWeatherTypeSize
+	return packets.ReflectSize(p)
 }
 
 func (p EnvSetWeatherType) Bytes() []byte {
@@ -43,7 +41,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1f,
 		Read: ReadEnvSetWeatherType,
-		Size: EnvSetWeatherTypeSize,
+		Size: packets.ReflectSize(&EnvSetWeatherType{}),
 		Type: packets.ServerOnly,
 		Name: "Env Set Weather Type (CPE)",
 	})

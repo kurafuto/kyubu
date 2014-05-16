@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const CustomBlockSupportLevelSize = (packets.ByteSize + packets.ByteSize)
-
 type CustomBlockSupportLevel struct {
 	PacketId     byte
 	SupportLevel byte
@@ -14,7 +12,7 @@ func (p CustomBlockSupportLevel) Id() byte {
 }
 
 func (p CustomBlockSupportLevel) Size() int {
-	return CustomBlockSupportLevelSize
+	return packets.ReflectSize(p)
 }
 
 func (p CustomBlockSupportLevel) Bytes() []byte {
@@ -43,7 +41,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x13,
 		Read: ReadCustomBlockSupportLevel,
-		Size: CustomBlockSupportLevelSize,
+		Size: packets.ReflectSize(&CustomBlockSupportLevel{}),
 		Type: packets.Both,
 		Name: "Custom Block Support Level (CPE)",
 	})

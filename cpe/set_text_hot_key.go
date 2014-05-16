@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const SetTextHotKeySize = (packets.ByteSize + packets.StringSize + packets.StringSize + packets.IntSize + packets.ByteSize)
-
 type SetTextHotKey struct {
 	PacketId byte
 	Label    string
@@ -20,7 +18,7 @@ func (p SetTextHotKey) Id() byte {
 }
 
 func (p SetTextHotKey) Size() int {
-	return SetTextHotKeySize
+	return packets.ReflectSize(p)
 }
 
 func (p SetTextHotKey) Bytes() []byte {
@@ -58,7 +56,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x15,
 		Read: ReadSetTextHotKey,
-		Size: SetTextHotKeySize,
+		Size: packets.ReflectSize(&SetTextHotKey{}),
 		Type: packets.ServerOnly,
 		Name: "Set Text Hot Key (CPE)",
 	})

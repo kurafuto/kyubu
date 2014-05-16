@@ -1,7 +1,5 @@
 package packets
 
-const LevelInitializeSize = ByteSize // Packet ID
-
 type LevelInitialize struct {
 	PacketId byte
 }
@@ -11,7 +9,7 @@ func (p LevelInitialize) Id() byte {
 }
 
 func (p LevelInitialize) Size() int {
-	return LevelInitializeSize
+	return ReflectSize(p)
 }
 
 func (p LevelInitialize) Bytes() []byte {
@@ -27,4 +25,14 @@ func ReadLevelInitialize(b []byte) (Packet, error) {
 func NewLevelInitialize() (p *LevelInitialize, err error) {
 	p = &LevelInitialize{PacketId: 0x01}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x02,
+		Read: ReadLevelInitialize,
+		Size: ReflectSize(&LevelInitialize{}),
+		Type: ServerOnly,
+		Name: "Level Initialize",
+	})
 }

@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const SetClickDistanceSize = (packets.ByteSize + packets.ShortSize)
-
 type SetClickDistance struct {
 	PacketId byte
 	Distance int16
@@ -14,7 +12,7 @@ func (p SetClickDistance) Id() byte {
 }
 
 func (p SetClickDistance) Size() int {
-	return SetClickDistanceSize
+	return packets.ReflectSize(p)
 }
 
 func (p SetClickDistance) Bytes() []byte {
@@ -43,7 +41,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x12,
 		Read: ReadSetClickDistance,
-		Size: SetClickDistanceSize,
+		Size: packets.ReflectSize(&SetClickDistance{}),
 		Type: packets.ServerOnly,
 		Name: "Set Click Distance (CPE)",
 	})

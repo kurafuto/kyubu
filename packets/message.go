@@ -2,10 +2,6 @@ package packets
 
 import "fmt"
 
-const MessageSize = (ByteSize + // Packet ID
-	SByteSize + // Player ID
-	StringSize) // Message
-
 type Message struct {
 	PacketId byte
 	PlayerId int8
@@ -17,7 +13,7 @@ func (p Message) Id() byte {
 }
 
 func (p Message) Size() int {
-	return MessageSize
+	return ReflectSize(p)
 }
 
 func (p Message) Bytes() []byte {
@@ -40,4 +36,14 @@ func NewMessage(playerId int8, message string) (p *Message, err error) {
 		Message:  message,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x0d,
+		Read: ReadMessage,
+		Size: ReflectSize(&Message{}),
+		Type: Both,
+		Name: "Message",
+	})
 }

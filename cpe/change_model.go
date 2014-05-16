@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const ChangeModelSize = (packets.ByteSize + packets.ByteSize + packets.StringSize)
-
 type ChangeModel struct {
 	PacketId  byte
 	EntityId  byte
@@ -18,7 +16,7 @@ func (p ChangeModel) Id() byte {
 }
 
 func (p ChangeModel) Size() int {
-	return ChangeModelSize
+	return packets.ReflectSize(p)
 }
 
 func (p ChangeModel) Bytes() []byte {
@@ -52,7 +50,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1d,
 		Read: ReadChangeModel,
-		Size: ChangeModelSize,
+		Size: packets.ReflectSize(&ChangeModel{}),
 		Type: packets.ServerOnly,
 		Name: "Change Model (CPE)",
 	})

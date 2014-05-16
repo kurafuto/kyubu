@@ -1,10 +1,5 @@
 package packets
 
-const OrientationUpdateSize = (ByteSize + // Packet ID
-	SByteSize + // Player ID
-	ByteSize + // Yaw (Heading)
-	ByteSize) // Pitch
-
 type OrientationUpdate struct {
 	PacketId   byte
 	PlayerId   int8
@@ -16,7 +11,7 @@ func (p OrientationUpdate) Id() byte {
 }
 
 func (p OrientationUpdate) Size() int {
-	return OrientationUpdateSize
+	return ReflectSize(p)
 }
 
 func (p OrientationUpdate) Bytes() []byte {
@@ -37,4 +32,14 @@ func NewOrientationUpdate(playerId int8, yaw, pitch byte) (p *OrientationUpdate,
 		Pitch:    pitch,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x0b,
+		Read: ReadOrientationUpdate,
+		Size: ReflectSize(&OrientationUpdate{}),
+		Type: ServerOnly,
+		Name: "Orientation Update",
+	})
 }

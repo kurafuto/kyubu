@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const SetBlockPermissionSize = (packets.ByteSize + packets.ByteSize + packets.ByteSize + packets.ByteSize)
-
 type SetBlockPermission struct {
 	PacketId       byte
 	BlockType      byte
@@ -16,7 +14,7 @@ func (p SetBlockPermission) Id() byte {
 }
 
 func (p SetBlockPermission) Size() int {
-	return SetBlockPermissionSize
+	return packets.ReflectSize(p)
 }
 
 func (p SetBlockPermission) Bytes() []byte {
@@ -47,7 +45,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1c,
 		Read: ReadSetBlockPermission,
-		Size: SetBlockPermissionSize,
+		Size: packets.ReflectSize(&SetBlockPermission{}),
 		Type: packets.ServerOnly,
 		Name: "Set Block Permission (CPE)",
 	})

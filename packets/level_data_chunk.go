@@ -2,11 +2,6 @@ package packets
 
 import "fmt"
 
-const LevelDataChunkSize = (ByteSize + // Packet ID
-	ShortSize + // Chunk Length
-	BytesSize + // Chunk Data
-	ByteSize) // Percent Complete
-
 type LevelDataChunk struct {
 	PacketId        byte
 	ChunkLength     int16
@@ -19,7 +14,7 @@ func (p LevelDataChunk) Id() byte {
 }
 
 func (p LevelDataChunk) Size() int {
-	return LevelDataChunkSize
+	return ReflectSize(p)
 }
 
 func (p LevelDataChunk) Bytes() []byte {
@@ -43,4 +38,14 @@ func NewLevelDataChunk(chunkData []byte, percentComplete byte) (p *LevelDataChun
 		PercentComplete: percentComplete,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x03,
+		Read: ReadLevelDataChunk,
+		Size: ReflectSize(&LevelDataChunk{}),
+		Type: ServerOnly,
+		Name: "Level Data Chunk",
+	})
 }

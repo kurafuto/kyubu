@@ -2,8 +2,6 @@ package cpe
 
 import "github.com/sysr-q/kyubu/packets"
 
-const EnvSetColorSize = (packets.ByteSize + packets.ByteSize + packets.ShortSize + packets.ShortSize + packets.ShortSize)
-
 type EnvSetColor struct {
 	PacketId         byte
 	Variable         byte
@@ -15,7 +13,7 @@ func (p EnvSetColor) Id() byte {
 }
 
 func (p EnvSetColor) Size() int {
-	return EnvSetColorSize
+	return packets.ReflectSize(p)
 }
 
 func (p EnvSetColor) Bytes() []byte {
@@ -47,7 +45,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x19,
 		Read: ReadEnvSetColor,
-		Size: EnvSetColorSize,
+		Size: packets.ReflectSize(&EnvSetColor{}),
 		Type: packets.ServerOnly,
 		Name: "Env Set Color (CPE)",
 	})

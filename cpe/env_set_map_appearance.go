@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const EnvSetMapAppearanceSize = (packets.ByteSize + packets.StringSize + packets.ByteSize + packets.ByteSize + packets.ShortSize)
-
 type EnvSetMapAppearance struct {
 	PacketId   byte
 	TextureUrl string
@@ -20,7 +18,7 @@ func (p EnvSetMapAppearance) Id() byte {
 }
 
 func (p EnvSetMapAppearance) Size() int {
-	return EnvSetMapAppearanceSize
+	return packets.ReflectSize(p)
 }
 
 func (p EnvSetMapAppearance) Bytes() []byte {
@@ -56,7 +54,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x1e,
 		Read: ReadEnvSetMapAppearance,
-		Size: EnvSetMapAppearanceSize,
+		Size: packets.ReflectSize(&EnvSetMapAppearance{}),
 		Type: packets.ServerOnly,
 		Name: "Env Set Map Appearance(CPE)",
 	})

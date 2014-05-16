@@ -5,8 +5,6 @@ import (
 	"github.com/sysr-q/kyubu/packets"
 )
 
-const ExtAddEntitySize = (packets.ByteSize + packets.ByteSize + packets.StringSize + packets.StringSize)
-
 type ExtAddEntity struct {
 	PacketId   byte
 	EntityId   byte
@@ -19,7 +17,7 @@ func (p ExtAddEntity) Id() byte {
 }
 
 func (p ExtAddEntity) Size() int {
-	return ExtAddEntitySize
+	return packets.ReflectSize(p)
 }
 
 func (p ExtAddEntity) Bytes() []byte {
@@ -53,7 +51,7 @@ func init() {
 	packets.MustRegister(&packets.PacketInfo{
 		Id:   0x17,
 		Read: ReadExtAddEntity,
-		Size: ExtAddEntitySize,
+		Size: packets.ReflectSize(&ExtAddEntity{}),
 		Type: packets.ServerOnly,
 		Name: "Ext Add Entity (CPE)",
 	})

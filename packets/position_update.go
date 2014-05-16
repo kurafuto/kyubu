@@ -1,11 +1,5 @@
 package packets
 
-const PositionUpdateSize = (ByteSize + // Packet ID
-	SByteSize + // Player ID
-	SByteSize + // Change in X
-	SByteSize + // Change in Y
-	SByteSize) // Change in Z
-
 type PositionUpdate struct {
 	PacketId byte
 	PlayerId int8
@@ -17,7 +11,7 @@ func (p PositionUpdate) Id() byte {
 }
 
 func (p PositionUpdate) Size() int {
-	return PositionUpdateSize
+	return ReflectSize(p)
 }
 
 func (p PositionUpdate) Bytes() []byte {
@@ -39,4 +33,14 @@ func NewPositionUpdate(playerId int8, x, y, z int8) (p *PositionUpdate, err erro
 		Z:        z,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x0a,
+		Read: ReadPositionUpdate,
+		Size: ReflectSize(&PositionUpdate{}),
+		Type: ServerOnly,
+		Name: "Position Update",
+	})
 }

@@ -36,7 +36,10 @@ func ReflectBytes(p Packet) []byte {
 //   err := ReflectRead(b, &p)
 func ReflectRead(b []byte, v Packet) error {
 	buf := NewPacketWrapper(b)
-	vp := reflect.ValueOf(v).Elem()
+	vp := reflect.ValueOf(v)
+	if vp.Kind() == reflect.Interface || vp.Kind() == reflect.Ptr {
+		vp = vp.Elem()
+	}
 	for i := 0; i < vp.NumField(); i++ {
 		v := vp.Field(i)
 		switch v.Kind() {
@@ -88,7 +91,10 @@ func ReflectRead(b []byte, v Packet) error {
 // ReflectSize uses reflection to figure out the size of a given packet based
 // on the fields it defines.
 func ReflectSize(p Packet) (size int) {
-	vp := reflect.ValueOf(p).Elem()
+	vp := reflect.ValueOf(p)
+	if vp.Kind() == reflect.Interface || vp.Kind() == reflect.Ptr {
+		vp = vp.Elem()
+	}
 	for i := 0; i < vp.NumField(); i++ {
 		v := vp.Field(i)
 		switch v.Kind() {

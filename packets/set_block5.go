@@ -2,13 +2,6 @@ package packets
 
 import "errors"
 
-const SetBlock5Size = (ByteSize + // Packet ID
-	ShortSize + // X
-	ShortSize + // Y
-	ShortSize + // Z
-	ByteSize + // Mode
-	ByteSize) // Block type
-
 // SetBlock5 [0x05] is the client only Set Block packet.
 // Similar to SetBlock6 [0x06]
 type SetBlock5 struct {
@@ -22,7 +15,7 @@ func (p SetBlock5) Id() byte {
 }
 
 func (p SetBlock5) Size() int {
-	return SetBlock5Size
+	return ReflectSize(p)
 }
 
 func (p SetBlock5) Bytes() []byte {
@@ -48,4 +41,14 @@ func NewSetBlock5(x, y, z int16, mode, blockType byte) (p *SetBlock5, err error)
 		BlockType: blockType,
 	}
 	return
+}
+
+func init() {
+	MustRegister(&PacketInfo{
+		Id:   0x05,
+		Read: ReadSetBlock5,
+		Size: ReflectSize(&SetBlock5{}),
+		Type: ClientOnly,
+		Name: "Set Block [C->S]",
+	})
 }
