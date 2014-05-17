@@ -73,7 +73,7 @@ func TestLevelInitialize(t *testing.T) {
 }
 
 func TestLevelDataChunk(t *testing.T) {
-	data := bytes.Repeat([]byte{0x01}, 512)
+	data := bytes.Repeat([]byte{0x6e, 0x6f}, BytesSize/2)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, false, data, byte(25))
 	data = bytes.Repeat([]byte{0x01}, BytesSize+1)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, true, data, byte(25))

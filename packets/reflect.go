@@ -3,7 +3,6 @@ package packets
 import (
 	"fmt"
 	"reflect"
-	//"github.com/davecgh/go-spew/spew"
 )
 
 // ReflectBytes uses reflection to create a byte array out of a packet.
@@ -34,9 +33,9 @@ func ReflectBytes(p Packet) []byte {
 // ReflectRead unmarshals the bytes from b into v. Similar to encoding/json.Umarshal
 //   var p MyPacket
 //   err := ReflectRead(b, &p)
-func ReflectRead(b []byte, v Packet) error {
+func ReflectRead(b []byte, p Packet) error {
 	buf := NewPacketWrapper(b)
-	vp := reflect.ValueOf(v)
+	vp := reflect.ValueOf(p)
 	if vp.Kind() == reflect.Interface || vp.Kind() == reflect.Ptr {
 		vp = vp.Elem()
 	}
@@ -83,7 +82,6 @@ func ReflectRead(b []byte, v Packet) error {
 	}
 	if buf.Buffer.Len() != 0 {
 		fmt.Printf("kyubu: ReflectRead(): expected 0 leftover, had %d\n", buf.Buffer.Len())
-		//spew.Dump(buf.Buffer.Bytes())
 	}
 	return nil
 }

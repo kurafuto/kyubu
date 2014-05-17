@@ -35,7 +35,7 @@ func (p *parser) Next() (Packet, error) {
 		return nil, fmt.Errorf("kyubu: Unrecognized packet id %#.2x", id)
 	}
 
-	var packetData []byte
+	packetData := make([]byte, packetInfo.Size)
 	if packetInfo.Size == 1 {
 		// We only wanted the packet id.
 		packetData = idByte
@@ -52,12 +52,14 @@ func (p *parser) Next() (Packet, error) {
 			// We still want `delta` bytes. Let's try to get them.
 			delta := restSize - n
 			rest := make([]byte, delta)
+
 			an, err := p.r.Read(rest)
 			if err != nil {
 				return nil, fmt.Errorf("kyubu: Error reading packet %#.2x: %s", id, err)
 			}
+			// Slice so we don't accidentally overflow the packet size.
+			restData = append(restData[:n], rest...)
 			n += an
-			restData = append(restData, rest...)
 		}
 
 		if n != restSize {
