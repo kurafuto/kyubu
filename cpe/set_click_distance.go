@@ -38,11 +38,11 @@ func NewSetClickDistance(distance int16) (p *SetClickDistance, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x12,
-		Read: ReadSetClickDistance,
-		Size: packets.ReflectSize(&SetClickDistance{}),
-		Type: packets.ServerOnly,
-		Name: "Set Click Distance (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x12,
+		Read:      ReadSetClickDistance,
+		Size:      packets.ReflectSize(&SetClickDistance{}),
+		Direction: packets.Anomalous,
+		Name:      "Set Click Distance (CPE)",
 	})
 }

@@ -155,28 +155,3 @@ func TestReadBytes(t *testing.T) {
 		t.Fatalf("expected {0x01}*1024, got %v", by)
 	}
 }
-
-func TestPacketTypeString(t *testing.T) {
-	serverOnly := ServerOnly.String()
-	if serverOnly != "S->C" {
-		t.Fatalf(`expected "S->C", got %q`, serverOnly)
-	}
-	clientOnly := ClientOnly.String()
-	if clientOnly != "C->S" {
-		t.Fatalf(`expected "C->S", got %q`, clientOnly)
-	}
-	both := Both.String()
-	if both != "C<>S" {
-		t.Fatalf(`expected "C<>S", got %q`, both)
-	}
-	x := PacketType(5).String()
-	if x != "????" {
-		t.Fatalf(`expected "????", got %q`, x)
-	}
-}
-
-func TestRegisterPacket(t *testing.T) {
-	if ok, err := Register(&PacketInfo{Id: 0x00}); err == nil {
-		t.Fatal("round 1: expected an error, got nil and ok:", ok)
-	}
-}

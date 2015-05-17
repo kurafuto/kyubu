@@ -53,11 +53,11 @@ func NewSetTextHotKey(label, action string, keyCode int32, keyMods byte) (p *Set
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x15,
-		Read: ReadSetTextHotKey,
-		Size: packets.ReflectSize(&SetTextHotKey{}),
-		Type: packets.ServerOnly,
-		Name: "Set Text Hot Key (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x15,
+		Read:      ReadSetTextHotKey,
+		Size:      packets.ReflectSize(&SetTextHotKey{}),
+		Direction: packets.Anomalous,
+		Name:      "Set Text Hot Key (CPE)",
 	})
 }

@@ -3,13 +3,13 @@ package cpe
 import "github.com/sysr-q/kyubu/packets"
 
 type HackControl struct {
-	PacketId    byte
-	Flying byte
-	NoClip byte
-	Speeding byte
-	SpawnControl byte
+	PacketId        byte
+	Flying          byte
+	NoClip          byte
+	Speeding        byte
+	SpawnControl    byte
 	ThirdPersonView byte
-	JumpHeight int16
+	JumpHeight      int16
 }
 
 func (p HackControl) Id() byte {
@@ -36,24 +36,23 @@ func ReadHackControl(b []byte) (packets.Packet, error) {
 
 func NewHackControl(flying, noClip, speeding, spawnControl, thirdPerson byte, jumpHeight int16) (p *HackControl, err error) {
 	p = &HackControl{
-		PacketId:    0x20,
-		Flying: flying,
-		NoClip: noClip,
-		Speeding: speeding,
-		SpawnControl: spawnControl,
+		PacketId:        0x20,
+		Flying:          flying,
+		NoClip:          noClip,
+		Speeding:        speeding,
+		SpawnControl:    spawnControl,
 		ThirdPersonView: thirdPerson,
-		JumpHeight: jumpHeight,
+		JumpHeight:      jumpHeight,
 	}
 	return
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x20,
-		Read: ReadHackControl,
-		Size: packets.ReflectSize(&HackControl{}),
-		Type: packets.ServerOnly,
-		Name: "Hack Control (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x20,
+		Read:      ReadHackControl,
+		Size:      packets.ReflectSize(&HackControl{}),
+		Direction: packets.Anomalous,
+		Name:      "Hack Control (CPE)",
 	})
 }
-

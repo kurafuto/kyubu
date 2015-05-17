@@ -38,11 +38,11 @@ func NewRemoveSelection(selectionId byte) (p *RemoveSelection, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1b,
-		Read: ReadRemoveSelection,
-		Size: packets.ReflectSize(&RemoveSelection{}),
-		Type: packets.ServerOnly,
-		Name: "Remove Selection (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1b,
+		Read:      ReadRemoveSelection,
+		Size:      packets.ReflectSize(&RemoveSelection{}),
+		Direction: packets.Anomalous,
+		Name:      "Remove Selection (CPE)",
 	})
 }

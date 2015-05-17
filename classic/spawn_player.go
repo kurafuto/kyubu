@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 import "fmt"
 
@@ -15,22 +17,22 @@ func (p SpawnPlayer) Id() byte {
 }
 
 func (p SpawnPlayer) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p SpawnPlayer) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadSpawnPlayer(b []byte) (Packet, error) {
+func ReadSpawnPlayer(b []byte) (packets.Packet, error) {
 	var p SpawnPlayer
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
 func NewSpawnPlayer(playerId int8, playerName string, x, y, z int16, yaw, pitch byte) (p *SpawnPlayer, err error) {
-	if len(playerName) > StringSize {
-		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
+	if len(playerName) > packets.StringSize {
+		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", packets.StringSize)
 	}
 	p = &SpawnPlayer{
 		PacketId:   0x07,
@@ -46,11 +48,11 @@ func NewSpawnPlayer(playerId int8, playerName string, x, y, z int16, yaw, pitch 
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x07,
-		Read: ReadSpawnPlayer,
-		Size: ReflectSize(&SpawnPlayer{}),
-		Type: ServerOnly,
-		Name: "Spawn Player",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x07,
+		Read:      ReadSpawnPlayer,
+		Size:      packets.ReflectSize(&SpawnPlayer{}),
+		Direction: packets.Anomalous,
+		Name:      "Spawn Player",
 	})
 }

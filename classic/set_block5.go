@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 import "errors"
 
@@ -15,16 +17,16 @@ func (p SetBlock5) Id() byte {
 }
 
 func (p SetBlock5) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p SetBlock5) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadSetBlock5(b []byte) (Packet, error) {
+func ReadSetBlock5(b []byte) (packets.Packet, error) {
 	var p SetBlock5
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
@@ -44,11 +46,11 @@ func NewSetBlock5(x, y, z int16, mode, blockType byte) (p *SetBlock5, err error)
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x05,
-		Read: ReadSetBlock5,
-		Size: ReflectSize(&SetBlock5{}),
-		Type: ClientOnly,
-		Name: "Set Block [C->S]",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x05,
+		Read:      ReadSetBlock5,
+		Size:      packets.ReflectSize(&SetBlock5{}),
+		Direction: packets.Anomalous,
+		Name:      "Set Block [C->S]",
 	})
 }

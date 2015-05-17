@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 type OrientationUpdate struct {
 	PacketId   byte
@@ -11,16 +13,16 @@ func (p OrientationUpdate) Id() byte {
 }
 
 func (p OrientationUpdate) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p OrientationUpdate) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadOrientationUpdate(b []byte) (Packet, error) {
+func ReadOrientationUpdate(b []byte) (packets.Packet, error) {
 	var p OrientationUpdate
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
@@ -35,11 +37,11 @@ func NewOrientationUpdate(playerId int8, yaw, pitch byte) (p *OrientationUpdate,
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x0b,
-		Read: ReadOrientationUpdate,
-		Size: ReflectSize(&OrientationUpdate{}),
-		Type: ServerOnly,
-		Name: "Orientation Update",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x0b,
+		Read:      ReadOrientationUpdate,
+		Size:      packets.ReflectSize(&OrientationUpdate{}),
+		Direction: packets.Anomalous,
+		Name:      "Orientation Update",
 	})
 }

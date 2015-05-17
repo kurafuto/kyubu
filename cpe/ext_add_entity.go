@@ -48,11 +48,11 @@ func NewExtAddEntity(entityId byte, inGameName, skinName string) (p *ExtAddEntit
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x17,
-		Read: ReadExtAddEntity,
-		Size: packets.ReflectSize(&ExtAddEntity{}),
-		Type: packets.ServerOnly,
-		Name: "Ext Add Entity (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x17,
+		Read:      ReadExtAddEntity,
+		Size:      packets.ReflectSize(&ExtAddEntity{}),
+		Direction: packets.Anomalous,
+		Name:      "Ext Add Entity (CPE)",
 	})
 }

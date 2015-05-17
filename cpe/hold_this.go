@@ -40,11 +40,11 @@ func NewHoldThis(blockToHold, preventChange byte) (p *HoldThis, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x14,
-		Read: ReadHoldThis,
-		Size: packets.ReflectSize(&HoldThis{}),
-		Type: packets.ServerOnly,
-		Name: "Hold This (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x14,
+		Read:      ReadHoldThis,
+		Size:      packets.ReflectSize(&HoldThis{}),
+		Direction: packets.Anomalous,
+		Name:      "Hold This (CPE)",
 	})
 }

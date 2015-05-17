@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 import "fmt"
 
@@ -14,22 +16,22 @@ func (p LevelDataChunk) Id() byte {
 }
 
 func (p LevelDataChunk) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p LevelDataChunk) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadLevelDataChunk(b []byte) (Packet, error) {
+func ReadLevelDataChunk(b []byte) (packets.Packet, error) {
 	var p LevelDataChunk
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
 func NewLevelDataChunk(chunkData []byte, percentComplete byte) (p *LevelDataChunk, err error) {
-	if len(chunkData) > BytesSize {
-		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes", BytesSize)
+	if len(chunkData) > packets.BytesSize {
+		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes", packets.BytesSize)
 	}
 	p = &LevelDataChunk{
 		PacketId:        0x03,
@@ -41,11 +43,11 @@ func NewLevelDataChunk(chunkData []byte, percentComplete byte) (p *LevelDataChun
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x03,
-		Read: ReadLevelDataChunk,
-		Size: ReflectSize(&LevelDataChunk{}),
-		Type: ServerOnly,
-		Name: "Level Data Chunk",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x03,
+		Read:      ReadLevelDataChunk,
+		Size:      packets.ReflectSize(&LevelDataChunk{}),
+		Direction: packets.Anomalous,
+		Name:      "Level Data Chunk",
 	})
 }

@@ -38,11 +38,11 @@ func NewExtRemovePlayerName(nameId int16) (p *ExtRemovePlayerName, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x18,
-		Read: ReadExtRemovePlayerName,
-		Size: packets.ReflectSize(&ExtRemovePlayerName{}),
-		Type: packets.ServerOnly,
-		Name: "Ext Remove Player Name (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x18,
+		Read:      ReadExtRemovePlayerName,
+		Size:      packets.ReflectSize(&ExtRemovePlayerName{}),
+		Direction: packets.Anomalous,
+		Name:      "Ext Remove Player Name (CPE)",
 	})
 }

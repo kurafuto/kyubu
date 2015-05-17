@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 import "fmt"
 
@@ -15,22 +17,22 @@ func (p Identification) Id() byte {
 }
 
 func (p Identification) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p Identification) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadIdentification(b []byte) (Packet, error) {
+func ReadIdentification(b []byte) (packets.Packet, error) {
 	var p Identification
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
 func NewIdentification(name, key string) (p *Identification, err error) {
-	if len(name) > StringSize || len(key) > StringSize {
-		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", StringSize)
+	if len(name) > packets.StringSize || len(key) > packets.StringSize {
+		return nil, fmt.Errorf("kyubu/packets: cannot write over %d bytes in string", packets.StringSize)
 	}
 	p = &Identification{
 		PacketId:        0x00,
@@ -43,11 +45,11 @@ func NewIdentification(name, key string) (p *Identification, err error) {
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x00,
-		Read: ReadIdentification,
-		Size: ReflectSize(&Identification{}),
-		Type: Both,
-		Name: "Identification",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x00,
+		Read:      ReadIdentification,
+		Size:      packets.ReflectSize(&Identification{}),
+		Direction: packets.Anomalous,
+		Name:      "Identification",
 	})
 }

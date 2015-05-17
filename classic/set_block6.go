@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 // SetBlock6 [0x06] is the server only Set Block packet.
 // Similar to SetBlock5 [0x05]
@@ -13,16 +15,16 @@ func (p SetBlock6) Id() byte {
 }
 
 func (p SetBlock6) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p SetBlock6) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadSetBlock6(b []byte) (Packet, error) {
+func ReadSetBlock6(b []byte) (packets.Packet, error) {
 	var p SetBlock6
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
@@ -38,11 +40,11 @@ func NewSetBlock6(x, y, z int16, blockType byte) (p *SetBlock6, err error) {
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x06,
-		Read: ReadSetBlock6,
-		Size: ReflectSize(&SetBlock6{}),
-		Type: ServerOnly,
-		Name: "Set Block [S->C]",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x06,
+		Read:      ReadSetBlock6,
+		Size:      packets.ReflectSize(&SetBlock6{}),
+		Direction: packets.Anomalous,
+		Name:      "Set Block [S->C]",
 	})
 }

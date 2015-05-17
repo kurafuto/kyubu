@@ -42,11 +42,11 @@ func NewEnvSetColor(variable byte, red, green, blue int16) (p *EnvSetColor, err 
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x19,
-		Read: ReadEnvSetColor,
-		Size: packets.ReflectSize(&EnvSetColor{}),
-		Type: packets.ServerOnly,
-		Name: "Env Set Color (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x19,
+		Read:      ReadEnvSetColor,
+		Size:      packets.ReflectSize(&EnvSetColor{}),
+		Direction: packets.Anomalous,
+		Name:      "Env Set Color (CPE)",
 	})
 }

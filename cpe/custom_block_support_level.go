@@ -38,11 +38,11 @@ func NewCustomBlockSupportLevel(supportLevel byte) (p *CustomBlockSupportLevel, 
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x13,
-		Read: ReadCustomBlockSupportLevel,
-		Size: packets.ReflectSize(&CustomBlockSupportLevel{}),
-		Type: packets.Both,
-		Name: "Custom Block Support Level (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x13,
+		Read:      ReadCustomBlockSupportLevel,
+		Size:      packets.ReflectSize(&CustomBlockSupportLevel{}),
+		Direction: packets.Anomalous,
+		Name:      "Custom Block Support Level (CPE)",
 	})
 }

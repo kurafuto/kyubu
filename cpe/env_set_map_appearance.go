@@ -51,11 +51,11 @@ func NewEnvSetMapAppearance(textureUrl string, sideBlock, edgeBlock byte, sideLe
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1e,
-		Read: ReadEnvSetMapAppearance,
-		Size: packets.ReflectSize(&EnvSetMapAppearance{}),
-		Type: packets.ServerOnly,
-		Name: "Env Set Map Appearance(CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1e,
+		Read:      ReadEnvSetMapAppearance,
+		Size:      packets.ReflectSize(&EnvSetMapAppearance{}),
+		Direction: packets.Anomalous,
+		Name:      "Env Set Map Appearance(CPE)",
 	})
 }

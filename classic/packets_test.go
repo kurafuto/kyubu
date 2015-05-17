@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 import (
 	"bytes"
@@ -7,7 +9,7 @@ import (
 	"testing"
 )
 
-type packetReader func([]byte) (Packet, error)
+type packetReader func([]byte) (packets.Packet, error)
 
 func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, expectErr bool, a ...interface{}) {
 	// Forgive me, reflection overlords, for my misuse of your package.
@@ -32,8 +34,8 @@ func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, 
 		t.Fatal("instanciate error:", e)
 	}
 
-	var p Packet // god tier reflection cheats
-	p = res[0].Interface().(Packet)
+	var p packets.Packet // god tier reflection cheats
+	p = res[0].Interface().(packets.Packet)
 
 	read, err := reader(p.Bytes())
 	if expectErr && err == nil {
@@ -49,9 +51,9 @@ func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, 
 	if p.Size() != read.Size() {
 		t.Fatalf("original packet size %d != recreated size %d", p.Size(), read.Size())
 	}
-	t.Logf("ReflectSize(p) = %d %#v", ReflectSize(p), p)
-	if ReflectSize(p) != p.Size() {
-		t.Fatalf("calculated ReflectSize %d != original size %d", ReflectSize(p), p.Size())
+	t.Logf("packets.ReflectSize(p) = %d %#v", packets.ReflectSize(p), p)
+	if packets.ReflectSize(p) != p.Size() {
+		t.Fatalf("calculated packets.ReflectSize %d != original size %d", packets.ReflectSize(p), p.Size())
 	}
 
 	if !reflect.DeepEqual(p, read) {
@@ -61,7 +63,7 @@ func testPacketReencode(creator interface{}, reader packetReader, t *testing.T, 
 
 func TestIdentification(t *testing.T) {
 	testPacketReencode(NewIdentification, ReadIdentification, t, false, "test", "test")
-	testPacketReencode(NewIdentification, ReadIdentification, t, true, strings.Repeat("t", StringSize+1), "test")
+	testPacketReencode(NewIdentification, ReadIdentification, t, true, strings.Repeat("t", packets.StringSize+1), "test")
 }
 
 func TestPing(t *testing.T) {
@@ -73,9 +75,9 @@ func TestLevelInitialize(t *testing.T) {
 }
 
 func TestLevelDataChunk(t *testing.T) {
-	data := bytes.Repeat([]byte{0x6e, 0x6f}, BytesSize/2)
+	data := bytes.Repeat([]byte{0x6e, 0x6f}, packets.BytesSize/2)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, false, data, byte(25))
-	data = bytes.Repeat([]byte{0x01}, BytesSize+1)
+	data = bytes.Repeat([]byte{0x01}, packets.BytesSize+1)
 	testPacketReencode(NewLevelDataChunk, ReadLevelDataChunk, t, true, data, byte(25))
 }
 
@@ -95,7 +97,7 @@ func TestSetBlock6(t *testing.T) {
 func TestSpawnPlayer(t *testing.T) {
 	v := []interface{}{int8(1), "Notch", int16(64), int16(32), int16(64), byte(0), byte(0)}
 	testPacketReencode(NewSpawnPlayer, ReadSpawnPlayer, t, false, v...)
-	v = []interface{}{int8(1), strings.Repeat("t", StringSize+1), int16(64), int16(32), int16(64), byte(0), byte(0)}
+	v = []interface{}{int8(1), strings.Repeat("t", packets.StringSize+1), int16(64), int16(32), int16(64), byte(0), byte(0)}
 	testPacketReencode(NewSpawnPlayer, ReadSpawnPlayer, t, true, v...)
 }
 
@@ -125,7 +127,7 @@ func TestDespawnPlayer(t *testing.T) {
 
 func TestMessage(t *testing.T) {
 	testPacketReencode(NewMessage, ReadMessage, t, false, int8(1), "Hello, world!")
-	testPacketReencode(NewMessage, ReadMessage, t, true, int8(1), strings.Repeat("t", StringSize+1))
+	testPacketReencode(NewMessage, ReadMessage, t, true, int8(1), strings.Repeat("t", packets.StringSize+1))
 }
 
 func TestDisconnectPlayer(t *testing.T) {

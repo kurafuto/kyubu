@@ -46,11 +46,11 @@ func NewExtEntry(extName string, version int32) (p *ExtEntry, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x11,
-		Read: ReadExtEntry,
-		Size: packets.ReflectSize(&ExtEntry{}),
-		Type: packets.Both,
-		Name: "Ext Entry (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x11,
+		Read:      ReadExtEntry,
+		Size:      packets.ReflectSize(&ExtEntry{}),
+		Direction: packets.Anomalous,
+		Name:      "Ext Entry (CPE)",
 	})
 }

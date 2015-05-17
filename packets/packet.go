@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	Endianness    = binary.BigEndian
-	AllowOverride = false // Can we replace packets?
+	Endianness = binary.BigEndian
 )
 
 // Size constants from spec, used to deduce packet size.
@@ -24,25 +23,16 @@ const (
 	BytesSize  = 1024
 )
 
-// PacketType lets us define whether packets are purely C->S, S->C or C<->S.
-// It's not an important implementation detail, but it's nice to know.
-type PacketType byte
+// PacketDirection lets us define whether packets are purely C->S or S->C.
+// This will change what the parser reads, depending on its direction.
+type PacketDirection byte
 
-func (t PacketType) String() string {
-	if t == ServerOnly {
-		return "S->C"
-	} else if t == ClientOnly {
-		return "C->S"
-	} else if t == Both {
-		return "C<>S"
-	}
-	return "????"
-}
-
+// ServerBound and ClientBound let us designate a parser's direction. This
+// defines what kind of packets it'll parse/serialize.
 const (
-	ServerOnly PacketType = iota
-	ClientOnly
-	Both
+	ServerBound PacketDirection = iota
+	ClientBound
+	Anomalous
 )
 
 type Packet interface {
@@ -53,35 +43,36 @@ type Packet interface {
 
 type PacketInfo struct {
 	Id   byte
-	Read func([]byte) (Packet, error)
-	Size int
-	Type PacketType
 	Name string // Human presentable
+
+	Read      readFunc
+	Size      int
+	Direction PacketDirection
 }
 
 type readFunc func([]byte) (Packet, error)
 
-var Packets = map[byte]*PacketInfo{}
+var (
+	// ServerPackets is a map of packet ids to serverbound packets.
+	ServerPackets = map[byte]*PacketInfo{}
+	// ClientPackets is a map of packet ids to clientbound packets.
+	ClientPackets = map[byte]*PacketInfo{}
+
+	// AnomalousPackets is a map of packet ids to "odd" packets. Basically
+	// packets which are declared as anomalous, which is kept around for Classic
+	// stuff (for now).
+	AnomalousPackets = map[byte]*PacketInfo{}
+)
 
 // Register allows users to register additional packets with the internal parser.
 // These packets will be recognised, parsed and sent to the parser channel.
-func Register(p *PacketInfo) (bool, error) {
-	if _, ok := Packets[p.Id]; ok && !AllowOverride {
-		return false, fmt.Errorf("Packet already registered to id %#.2x", p.Id)
-	}
-	Packets[p.Id] = p
-	return true, nil
-}
-
-// MustRegister is functionally the same as Register, however if an error is
-// returned, or the registration fails for whatever reason, it will panic.
-func MustRegister(p *PacketInfo) {
-	ok, err := Register(p)
-	if err != nil {
-		panic(err)
-	}
-	if !ok {
-		panic(fmt.Errorf("kyubu/packets: Registration of new packet %#.2x failed", p.Id))
+func Register(p *PacketInfo) {
+	if p.Direction == ServerBound {
+		ServerPackets[p.Id] = p
+	} else if p.Direction == ClientBound {
+		ClientPackets[p.Id] = p
+	} else if p.Direction == Anomalous {
+		AnomalousPackets[p.Id] = p
 	}
 }
 

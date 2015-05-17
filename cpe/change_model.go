@@ -47,11 +47,11 @@ func NewChangeModel(entityId byte, modelName string) (p *ChangeModel, err error)
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1d,
-		Read: ReadChangeModel,
-		Size: packets.ReflectSize(&ChangeModel{}),
-		Type: packets.ServerOnly,
-		Name: "Change Model (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1d,
+		Read:      ReadChangeModel,
+		Size:      packets.ReflectSize(&ChangeModel{}),
+		Direction: packets.Anomalous,
+		Name:      "Change Model (CPE)",
 	})
 }

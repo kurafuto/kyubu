@@ -60,11 +60,11 @@ func NewMakeSelection(selectionId byte, label string, startX, startY, startZ, en
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1a,
-		Read: ReadMakeSelection,
-		Size: packets.ReflectSize(&MakeSelection{}),
-		Type: packets.ServerOnly,
-		Name: "Make Selection (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1a,
+		Read:      ReadMakeSelection,
+		Size:      packets.ReflectSize(&MakeSelection{}),
+		Direction: packets.Anomalous,
+		Name:      "Make Selection (CPE)",
 	})
 }

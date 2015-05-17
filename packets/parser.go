@@ -10,7 +10,8 @@ type Parser interface {
 }
 
 type parser struct {
-	r io.Reader
+	r         io.Reader
+	direction PacketDirection
 	//C <-chan Packet
 }
 
@@ -29,8 +30,20 @@ func (p *parser) Next() (Packet, error) {
 	// Packet ID
 	id := idByte[0]
 
+	var (
+		packetInfo *PacketInfo
+		ok         bool
+	)
+
 	// Figure out what packet we're expecting.
-	packetInfo, ok := Packets[id]
+	if p.direction == ServerBound {
+		packetInfo, ok = ServerPackets[id]
+	} else if p.direction == ClientBound {
+		packetInfo, ok = ClientPackets[id]
+	} else {
+		packetInfo, ok = AnomalousPackets[id]
+	}
+
 	if !ok {
 		return nil, fmt.Errorf("kyubu: Unrecognized packet id %#.2x", id)
 	}
@@ -78,9 +91,9 @@ func (p *parser) Next() (Packet, error) {
 	return packet, nil
 }
 
-func NewParser(r io.Reader) Parser {
+func NewParser(r io.Reader, dir PacketDirection) Parser {
 	return &parser{
-		r: r,
-		//C: make(<-chan Packet),
+		r:         r,
+		direction: dir,
 	}
 }

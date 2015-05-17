@@ -38,11 +38,11 @@ func NewEnvSetWeatherType(weatherType byte) (p *EnvSetWeatherType, err error) {
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1f,
-		Read: ReadEnvSetWeatherType,
-		Size: packets.ReflectSize(&EnvSetWeatherType{}),
-		Type: packets.ServerOnly,
-		Name: "Env Set Weather Type (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1f,
+		Read:      ReadEnvSetWeatherType,
+		Size:      packets.ReflectSize(&EnvSetWeatherType{}),
+		Direction: packets.Anomalous,
+		Name:      "Env Set Weather Type (CPE)",
 	})
 }

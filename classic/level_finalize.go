@@ -1,4 +1,6 @@
-package packets
+package classic
+
+import "github.com/sysr-q/kyubu/packets"
 
 type LevelFinalize struct {
 	PacketId byte
@@ -10,16 +12,16 @@ func (p LevelFinalize) Id() byte {
 }
 
 func (p LevelFinalize) Size() int {
-	return ReflectSize(p)
+	return packets.ReflectSize(p)
 }
 
 func (p LevelFinalize) Bytes() []byte {
-	return ReflectBytes(p)
+	return packets.ReflectBytes(p)
 }
 
-func ReadLevelFinalize(b []byte) (Packet, error) {
+func ReadLevelFinalize(b []byte) (packets.Packet, error) {
 	var p LevelFinalize
-	err := ReflectRead(b, &p)
+	err := packets.ReflectRead(b, &p)
 	return &p, err
 }
 
@@ -34,11 +36,11 @@ func NewLevelFinalize(x, y, z int16) (p *LevelFinalize, err error) {
 }
 
 func init() {
-	MustRegister(&PacketInfo{
-		Id:   0x04,
-		Read: ReadLevelFinalize,
-		Size: ReflectSize(&LevelFinalize{}),
-		Type: ServerOnly,
-		Name: "Level Finalize",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x04,
+		Read:      ReadLevelFinalize,
+		Size:      packets.ReflectSize(&LevelFinalize{}),
+		Direction: packets.Anomalous,
+		Name:      "Level Finalize",
 	})
 }

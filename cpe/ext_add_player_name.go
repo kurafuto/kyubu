@@ -52,11 +52,11 @@ func NewExtAddPlayerName(nameId int16, playerName, listName, groupName string, g
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x16,
-		Read: ReadExtAddPlayerName,
-		Size: packets.ReflectSize(&ExtAddPlayerName{}),
-		Type: packets.ServerOnly,
-		Name: "Ext Add Player Name (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x16,
+		Read:      ReadExtAddPlayerName,
+		Size:      packets.ReflectSize(&ExtAddPlayerName{}),
+		Direction: packets.Anomalous,
+		Name:      "Ext Add Player Name (CPE)",
 	})
 }

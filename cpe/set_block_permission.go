@@ -42,11 +42,11 @@ func NewSetBlockPermission(blockType, allowPlacement, allowDeletion byte) (p *Se
 }
 
 func init() {
-	packets.MustRegister(&packets.PacketInfo{
-		Id:   0x1c,
-		Read: ReadSetBlockPermission,
-		Size: packets.ReflectSize(&SetBlockPermission{}),
-		Type: packets.ServerOnly,
-		Name: "Set Block Permission (CPE)",
+	packets.Register(&packets.PacketInfo{
+		Id:        0x1c,
+		Read:      ReadSetBlockPermission,
+		Size:      packets.ReflectSize(&SetBlockPermission{}),
+		Direction: packets.Anomalous,
+		Name:      "Set Block Permission (CPE)",
 	})
 }
