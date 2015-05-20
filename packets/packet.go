@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-var (
-	Endianness = binary.BigEndian
-)
-
 // Size constants from spec, used to deduce packet size.
 const (
 	ByteSize   = 1
