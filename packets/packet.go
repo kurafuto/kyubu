@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -33,10 +34,13 @@ const (
 
 type Packet interface {
 	Id() byte
-	Size() int
-	Bytes() []byte
+	Encode() func(io.Writer) error
+	Decode() func(io.Writer) error
+	//Size() int
+	//Bytes() []byte
 }
 
+// TODO: Remove
 type PacketInfo struct {
 	Id   byte
 	Name string // Human presentable
