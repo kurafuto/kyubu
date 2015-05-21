@@ -1,5 +1,6 @@
 // types.go has type aliases for all of the protocol types documented in:
 // http://wiki.vg/Protocol#Data_types
+// NOTE: We only alias non Go-builtin types. bool, int8, etc aren't here.
 
 package packets
 
@@ -13,151 +14,55 @@ import (
 var Endianness = binary.BigEndian
 
 /* Eventually we'll just need these:
-type VarInt int32
-type VarLong int64
+//type VarInt int32
+//type VarLong int64
+
 type Chunk x
 type Metadata x
 type Slot x
 type ObjectData x
 type NBT x
-type Position uint64
-type Angle x
+//type Position uint64
+//type Angle x
 type UUID x
 */
 
-// (1) false, true
-// Value can be either true (0x01) or false (0x00)
-type Boolean bool
+// (>= 1, <= 5) -2147483648 to 2147483647
+type VarInt int32
 
-func (t *Boolean) Encode(buf *bytes.Buffer) error {
-	if *t {
-		return binary.Write(buf, Endianness, byte(1))
-	} else {
-		return binary.Write(buf, Endianness, byte(0))
-	}
-}
-func (t *Boolean) Decode(buf *bytes.Buffer) (err error) {
-	b := make([]byte, 1)
-	_, err = buf.Read(b)
-	if err != nil {
-		return
-	}
-	if b[0] == 0x01 {
-		*t = Boolean(true)
-	} else if b[0] == 0x00 {
-		*t = Boolean(false)
-	} else {
-		err = fmt.Errorf("neither 0x00 or 0x01: % x", b[0])
-		return
-	}
-	return
+// (>= 1, <= 10) -9223372036854775808 to 9223372036854775807
+type VarLong int64
+
+// (8) x (-33554432 to 33554431), y (-2048 to 2047), z (-33554432 to 33554431)
+// x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer
+// Code lifted from thinkofdeath/steven:protocol/handshaking.go
+type Position uint64
+
+func NewPosition(x, y, z int) Position {
+	return ((Position(x) & 0x3FFFFFF) << 38) | ((Position(y) & 0xFFF) << 26) | (Position(z) & 0x3FFFFFF)
 }
 
-// (1) -128 to 127
-// Signed 8-bit integer, two's complement
-type Byte int8
-
-func (t *Byte) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
+func (p Position) X() int {
+	return int(int64(p) >> 38)
 }
 
-func (t *Byte) Decode(buf *bytes.Buffer) (err error) {
-	i := make([]byte, 1)
-	_, err = buf.Read(i)
-	if err != nil {
-		return
-	}
-	*t = Byte(i[0])
-	return
+func (p Position) Y() int {
+	return int((int64(p) >> 26) & 0xFFF)
 }
 
-// (1) 0 to 255
-// Unsigned 8-bit integer
-type UByte uint8
-
-func (t *UByte) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
+func (p Position) Z() int {
+	return int(int64(p) << 38 >> 38)
 }
 
-func (t *UByte) Decode(buf *bytes.Buffer) (err error) {
-	i := make([]byte, 1)
-	_, err = buf.Read(i)
-	if err != nil {
-		return
-	}
-	*t = UByte(i[0])
-	return
+func (p Position) String() string {
+	return fmt.Sprintf("%d,%d,%d", p.X(), p.Y(), p.Z())
 }
 
-// (2) -32768 to 32767
-// Signed 16-bit integer, two's complement
-type Short int16
+// (1) Rotation angle in steps of 1/256 of a full turn
+// Unsigned to get 0-255, rather than -128 to 127
+type Angle uint8
 
-func (t *Short) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *Short) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
-
-// (2) 0 to 65535
-// Unsigned 16-bit integer
-type UShort uint16
-
-func (t *UShort) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *UShort) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
-
-// (4) -2147483648 to 2147483647
-// Signed 32-bit integer, two's complement
-type Int int32
-
-func (t *Int) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *Int) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
-
-// (8) -9223372036854775808 to 9223372036854775807
-// Signed 64-bit integer, two's complement
-type Long int64
-
-func (t *Long) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *Long) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
-
-// (4) Single-precision 32-bit IEEE 754 floating point
-type Float float32
-
-func (t *Float) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *Float) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
-
-// (8) Double-precision 64-bit IEEE 754 floating point
-type Double float64
-
-func (t *Double) Encode(buf *bytes.Buffer) error {
-	return binary.Write(buf, Endianness, t)
-}
-
-func (t *Double) Decode(buf *bytes.Buffer) error {
-	return binary.Read(buf, Endianness, t)
-}
+//////// TODO: Remove below
 
 // (>= 1, <= 2147483652) A sequence of Unicode code points
 // UTF-8 string prefixed with its size in bytes as a VarInt
@@ -201,37 +106,3 @@ func (t *String) Decode(buf *bytes.Buffer) error {
 	*t = String(b)
 	return nil
 }
-
-// (>= 1, <= 5) -2147483648 to 2147483647
-// Read with encoding/binary.ReadVarint
-// TODO: Cast it to/from an int32
-type VarInt int32
-
-// (>= 1, <= 10) -9223372036854775808 to 9223372036854775807
-// Read with encoding/binary.ReadVarint
-type VarLong int64
-
-// TODO: Implement
-/*
-type Chunk x
-type Metadata x
-type Slot x
-type ObjectData x
-type NBTTag x
-*/
-
-// (8) x (-33554432 to 33554431), y (-2048 to 2047), z (-33554432 to 33554431)
-// x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer
-type Position struct {
-	X int32
-	Y int16
-	Z int32
-}
-
-// (1) Rotation angle in steps of 1/256 of a full turn
-type Angle byte
-
-// TODO: Implement
-/*
-type UUID x
-*/

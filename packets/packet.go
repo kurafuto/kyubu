@@ -22,7 +22,7 @@ const (
 
 // PacketDirection lets us define whether packets are purely C->S or S->C.
 // This will change what the parser reads, depending on its direction.
-type PacketDirection byte
+type PacketDirection int
 
 // ServerBound and ClientBound let us designate a parser's direction. This
 // defines what kind of packets it'll parse/serialize.
@@ -30,6 +30,15 @@ const (
 	ServerBound PacketDirection = iota
 	ClientBound
 	Anomalous
+)
+
+type State int
+
+const (
+	Handshake State = iota
+	Status
+	Login
+	Play
 )
 
 type Packet interface {
@@ -63,6 +72,18 @@ var (
 	// stuff (for now).
 	AnomalousPackets = map[byte]*PacketInfo{}
 )
+
+/*// TODO: This crap.
+type PacketFunction func() Packet
+
+var (
+	// [State][PacketDirection]
+	Packets = [4][3]PacketFunction
+)
+
+func Register(p Packet, direction PacketDirection, state State) {
+}
+*/
 
 // Register allows users to register additional packets with the internal parser.
 // These packets will be recognised, parsed and sent to the parser channel.
