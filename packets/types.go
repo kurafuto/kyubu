@@ -12,6 +12,19 @@ import (
 
 var Endianness = binary.BigEndian
 
+/* Eventually we'll just need these:
+type VarInt int32
+type VarLong int64
+type Chunk x
+type Metadata x
+type Slot x
+type ObjectData x
+type NBT x
+type Position uint64
+type Angle x
+type UUID x
+*/
+
 // (1) false, true
 // Value can be either true (0x01) or false (0x00)
 type Boolean bool

@@ -1,4 +1,4 @@
-//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=handshake
+//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=handshake -package=modern
 
 package modern
 
