@@ -5,18 +5,15 @@
 package packets
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 )
 
 var Endianness = binary.BigEndian
 
 /* Eventually we'll just need these:
-//type VarInt int32
-//type VarLong int64
-
 type Chunk x
 type Metadata x
 type Slot x
@@ -62,47 +59,114 @@ func (p Position) String() string {
 // Unsigned to get 0-255, rather than -128 to 127
 type Angle uint8
 
-//////// TODO: Remove below
+///////////////////////////////////////////////////////
+// NOTE: Copied + modified from Go stdlib source code.
+// Copyright 2011 The Go Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+///////////////////////////////////////////////////////
 
-// (>= 1, <= 2147483652) A sequence of Unicode code points
-// UTF-8 string prefixed with its size in bytes as a VarInt
-type String string
-
-func (t *String) Encode(buf *bytes.Buffer) (err error) {
-	// TODO: defer + recover() for PutVarint.
-	// TODO: This might not be efficient. Pool []byte arrays?
-	x := make([]byte, binary.MaxVarintLen32)
-	b := []byte(*t)
-
-	n := binary.PutVarint(x, int64(len(b)))
-
-	err = binary.Write(buf, Endianness, x[:n])
-	if err != nil {
-		return
+// PutUvarint encodes a uint64 into buf and returns the number of bytes written.
+// If the buffer is too small, PutUvarint will panic.
+func PutUvarint(buf []byte, x uint64) int {
+	i := 0
+	for x >= 0x80 {
+		buf[i] = byte(x) | 0x80
+		x >>= 7
+		i++
 	}
-
-	err = binary.Write(buf, Endianness, b)
-	if err != nil {
-		return
-	}
-	return nil
+	buf[i] = byte(x)
+	return i + 1
 }
 
-func (t *String) Decode(buf *bytes.Buffer) error {
-	n, err := binary.ReadVarint(buf)
-	if err != nil {
-		return err
+// Uvarint decodes a uint64 from buf and returns that value and the
+// number of bytes read (> 0). If an error occurred, the value is 0
+// and the number of bytes n is <= 0 meaning:
+//
+//	n == 0: buf too small
+//	n  < 0: value larger than 64 bits (overflow)
+//              and -n is the number of bytes read
+//
+func Uvarint(buf []byte) (uint64, int) {
+	var x uint64
+	var s uint
+	for i, b := range buf {
+		if b < 0x80 {
+			if i > 9 || i == 9 && b > 1 {
+				return 0, -(i + 1) // overflow
+			}
+			return x | uint64(b)<<s, i + 1
+		}
+		x |= uint64(b&0x7f) << s
+		s += 7
 	}
+	return 0, 0
+}
 
-	b := make([]byte, n)
-	n1, err := buf.Read(b)
-	if err != nil {
-		return err
-	} else if int64(n1) != n {
-		// TODO: delta := n - n1; Read()
-		return errors.New("didn't read enough bytes for string")
+// PutVarint encodes an int64 into buf and returns the number of bytes written.
+// If the buffer is too small, PutVarint will panic.
+func PutVarint(buf []byte, x int64) int {
+	ux := uint64(x) << 1
+	if x < 0 {
+		ux = ^ux
 	}
+	return PutUvarint(buf, ux)
+}
 
-	*t = String(b)
-	return nil
+// Varint decodes an int64 from buf and returns that value and the
+// number of bytes read (> 0). If an error occurred, the value is 0
+// and the number of bytes n is <= 0 with the following meaning:
+//
+//	n == 0: buf too small
+//	n  < 0: value larger than 64 bits (overflow)
+//              and -n is the number of bytes read
+//
+func Varint(buf []byte) (int64, int) {
+	ux, n := Uvarint(buf) // ok to continue in presence of error
+	x := int64(ux >> 1)
+	if ux&1 != 0 {
+		x = ^x
+	}
+	return x, n
+}
+
+var overflow = errors.New("binary: varint overflows a 64-bit integer")
+
+// ReadUvarint reads an encoded unsigned integer from r and returns it as a uint64.
+func ReadUvarint(r io.Reader) (uint64, error) {
+	var x uint64
+	var s uint
+	for i := 0; ; i++ {
+		b, err := readByte(r) //r.ReadByte()
+		if err != nil {
+			return x, err
+		}
+		if b < 0x80 {
+			if i > 9 || i == 9 && b > 1 {
+				return x, overflow
+			}
+			return x | uint64(b)<<s, nil
+		}
+		x |= uint64(b&0x7f) << s
+		s += 7
+	}
+}
+
+// ReadVarint reads an encoded signed integer from r and returns it as an int64.
+func ReadVarint(r io.Reader) (int64, error) {
+	ux, err := ReadUvarint(r) // ok to continue in presence of error
+	x := int64(ux >> 1)
+	if ux&1 != 0 {
+		x = ^x
+	}
+	return x, err
+}
+
+func readByte(r io.Reader) (byte, error) {
+	if rr, ok := r.(io.ByteReader); ok {
+		return rr.ReadByte()
+	}
+	var b [1]byte
+	_, err := r.Read(b[:1])
+	return b[0], err
 }

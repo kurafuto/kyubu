@@ -114,11 +114,6 @@ func main() {
 		})
 	}
 
-	imports["io"] = struct{}{}
-	imports["binary"] = struct{}{}
-	// TODO: Make sure we need this
-	imports["github.com/sysr-q/kyubu/packets"] = struct{}{}
-
 	errWrap := func(x string, y ...interface{}) string {
 		z := fmt.Sprintf(x, y...)
 		// err has to be predefined.
@@ -165,7 +160,7 @@ func main() {
 				// TODO: Is making a new []byte every time efficient?
 				fmt.Fprintf(&buf, "%s := make([]byte, binary.MaxVarintLen%d)\n", x, *varIntLen)
 				fmt.Fprintf(&buf, "%s := []byte(%s.%s)\n", b, t, name)
-				fmt.Fprintf(&buf, "%s := binary.PutVarint(%s, int64(len(%s)))\n", n, x, b)
+				fmt.Fprintf(&buf, "%s := packets.PutVarint(%s, int64(len(%s)))\n", n, x, b)
 				fmt.Fprintf(&buf, errWrap("binary.Write(ww, %s, %s[:%s])", Endianness, x, n))
 				fmt.Fprintf(&buf, errWrap("binary.Write(ww, %s, %s)", Endianness, b))
 			case "packets.VarInt", "packets.VarLong":
@@ -174,16 +169,18 @@ func main() {
 
 				// TODO: Is making a new []byte every time efficient?
 				fmt.Fprintf(&buf, "%s := make([]byte, binary.MaxVarintLen%d)\n", x, *varIntLen)
-				fmt.Fprintf(&buf, "%s := binary.PutVarint(%s, int64(%s.%s))\n", n, x, t, name)
+				fmt.Fprintf(&buf, "%s := packets.PutVarint(%s, int64(%s.%s))\n", n, x, t, name)
 				fmt.Fprintf(&buf, errWrap("binary.Write(ww, %s, %s[:%s])", Endianness, x, n))
 			case "packets.Chunk":
 			case "packets.Metadata":
 			case "packets.Slot":
 			case "packets.ObjectData":
 			case "packets.NBT":
-			case "packets.Position":
-			case "packets.Angle":
+			case "packets.Position", "packets.Angle":
+				fmt.Fprintf(&buf, errWrap("binary.Write(ww, %s, %s.%s)", Endianness, t, name))
 			case "packets.UUID":
+			default:
+				fmt.Fprintf(&buf, "// Unable to encode: %s\n", typeName)
 			}
 
 			fmt.Fprintf(&buf, "\n")
@@ -206,12 +203,11 @@ func main() {
 			name := field.Names[0].Name
 			fmt.Fprintf(&buf, "// Decoding: %s (%s)\n", name, typeName)
 
-			// TODO: ALL OF THIS
 			switch typeName {
 			case "bool":
 				tmp := tmpVar() // byte value for bool
-				fmt.Fprintf(&buf, "%s := make([]byte, 1)\n", tmp)
-				fmt.Fprintf(&buf, errWrap("_, err = rr.Read(b)\n"))
+				fmt.Fprintf(&buf, "var %s [1]byte\n", tmp)
+				fmt.Fprintf(&buf, errWrap("_, err = rr.Read(%s[:1])\n", tmp))
 				fmt.Fprintf(&buf, "if %s[0] == 0x01 {\n", tmp)
 				fmt.Fprintf(&buf, "%s.%s = true\n", t, name)
 				fmt.Fprintf(&buf, "} else {\n")
@@ -226,23 +222,24 @@ func main() {
 				b := tmpVar() // []byte to read into
 				x := tmpVar() // num of bytes read
 
-				fmt.Fprintf(&buf, "%s, err := binary.ReadVarint(rr)\n", n)
+				fmt.Fprintf(&buf, "%s, err := packets.ReadVarint(rr)\n", n)
 				fmt.Fprintf(&buf, "if err != nil {\nreturn\n}\n")
 				fmt.Fprintf(&buf, "%s := make([]byte, %s)\n", b, n)
 				fmt.Fprintf(&buf, "%s, err := rr.Read(%s)\n", x, b)
 				fmt.Fprintf(&buf, "if err != nil {\nreturn\n} ")
 				fmt.Fprintf(&buf, "else if int64(%s) != %s {\n", x, n)
+				// TODO: delta := n - n1; Read(b, delta) ...
 				fmt.Fprintf(&buf, `return errors.New("didn't read enough bytes for string")`+"\n")
 				fmt.Fprintf(&buf, "}\n")
 				fmt.Fprintf(&buf, "%s.%s = string(%s)\n", t, name, b)
 			case "packets.VarInt":
 				n := tmpVar()
-				fmt.Fprintf(&buf, "%s, err := binary.ReadVarint(rr)\n", n)
+				fmt.Fprintf(&buf, "%s, err := packets.ReadVarint(rr)\n", n)
 				fmt.Fprintf(&buf, "if err != nil {\nreturn\n}\n")
 				fmt.Fprintf(&buf, "%s.%s = int32(%s)\n", t, name, n)
 			case "packets.VarLong":
 				n := tmpVar()
-				fmt.Fprintf(&buf, "%s, err := binary.ReadVarint(rr)\n", n)
+				fmt.Fprintf(&buf, "%s, err := packets.ReadVarint(rr)\n", n)
 				fmt.Fprintf(&buf, "if err != nil {\nreturn\n}\n")
 				fmt.Fprintf(&buf, "%s.%s = %s\n", t, name, n)
 			case "packets.Chunk":
@@ -250,15 +247,22 @@ func main() {
 			case "packets.Slot":
 			case "packets.ObjectData":
 			case "packets.NBT":
-			case "packets.Position":
-			case "packets.Angle":
+			case "packets.Position", "packets.Angle":
+				fmt.Fprintf(&buf, errWrap("binary.Read(rr, %s, %s.%s)", Endianness, t, name))
 			case "packets.UUID":
+			default:
+				fmt.Fprintf(&buf, "// Unable to decode: %s\n", typeName)
 			}
 
 			fmt.Fprintf(&buf, "\n")
 		}
 		fmt.Fprintf(&buf, "return\n}\n\n")
 	}
+
+	imports["encoding/binary"] = struct{}{}
+	// TODO: Make sure we need this
+	imports["github.com/sysr-q/kyubu/packets"] = struct{}{}
+	imports["io"] = struct{}{}
 
 	var header bytes.Buffer
 
@@ -276,8 +280,23 @@ func main() {
 	fmt.Fprint(&header, ")\n\n")
 
 	// init() -- register all the packets
+	var states = map[string]string{
+		"handshake": "packets.Handshake",
+		"status":    "packets.Status",
+		"login":     "packets.Login",
+		"play":      "packets.Play",
+	}
+	var directions = map[string]string{
+		"serverbound": "packets.ServerBound",
+		"clientbound": "packets.ClientBound",
+		"anomalous":   "packets.Anomalous",
+	}
+
 	fmt.Fprintf(&header, "func init() {\n")
-	// TODO: for blah { Register() }
+	for _, p := range packets {
+		fs := "packets.Register(%s, %s, %s{}, func() packets.Packet { return &%s{} })\n"
+		fmt.Fprintf(&header, fs, states[*state], directions[*direction], p.name, p.name)
+	}
 	fmt.Fprintf(&header, "}\n\n")
 
 	// TODO: Write these to a file.

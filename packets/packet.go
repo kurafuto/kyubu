@@ -45,21 +45,7 @@ type Packet interface {
 	Id() byte
 	Encode() func(io.Writer) error
 	Decode() func(io.Writer) error
-	//Size() int
-	//Bytes() []byte
 }
-
-// TODO: Remove
-type PacketInfo struct {
-	Id   byte
-	Name string // Human presentable
-
-	Read      readFunc
-	Size      int
-	Direction PacketDirection
-}
-
-type readFunc func([]byte) (Packet, error)
 
 var (
 	// ServerPackets is a map of packet ids to serverbound packets.
@@ -74,16 +60,26 @@ var (
 )
 
 /*// TODO: This crap.
-type PacketFunction func() Packet
+type PacketFunc func() Packet
 
-var (
-	// [State][PacketDirection]
-	Packets = [4][3]PacketFunction
-)
+var Packets
 
-func Register(p Packet, direction PacketDirection, state State) {
+func Register(state State, dir PacketDirection, p Packet, f PacketFunc) {
+
 }
 */
+
+// TODO: Remove
+type PacketInfo struct {
+	Id   byte
+	Name string // Human presentable
+
+	Read      readFunc
+	Size      int
+	Direction PacketDirection
+}
+
+type readFunc func([]byte) (Packet, error)
 
 // Register allows users to register additional packets with the internal parser.
 // These packets will be recognised, parsed and sent to the parser channel.
