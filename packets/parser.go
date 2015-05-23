@@ -1,99 +1,77 @@
 package packets
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 )
 
-type Parser interface {
-	Next() (Packet, error)
-}
+var (
+	ErrNegativeLength = errors.New("kyubu: packet has negative length")
+)
 
-type parser struct {
-	r         io.Reader
-	direction PacketDirection
+type Parser struct {
+	r io.Reader
+
+	State     State
+	Direction PacketDirection
+
+	CompressionThreshold int
 	//C <-chan Packet
 }
 
-func (p *parser) Next() (Packet, error) {
-	// Parse out a single byte id
-	idByte := make([]byte, 1)
-	n, err := p.r.Read(idByte)
-	if err != nil && err == io.EOF {
-		return nil, err
-	} else if err != nil {
-		return nil, err
-	} else if n != len(idByte) {
-		return nil, fmt.Errorf("kyubu: Read failed for id, wanted %d bytes, got %d", len(idByte), n)
-	}
-
-	// Packet ID
-	id := idByte[0]
-
-	var (
-		packetInfo *PacketInfo
-		ok         bool
-	)
-
-	// Figure out what packet we're expecting.
-	if p.direction == ServerBound {
-		packetInfo, ok = ServerPackets[id]
-	} else if p.direction == ClientBound {
-		packetInfo, ok = ClientPackets[id]
-	} else {
-		packetInfo, ok = AnomalousPackets[id]
-	}
-
-	if !ok {
-		return nil, fmt.Errorf("kyubu: Unrecognized packet id %#.2x", id)
-	}
-
-	packetData := make([]byte, packetInfo.Size)
-	if packetInfo.Size == 1 {
-		// We only wanted the packet id.
-		packetData = idByte
-	} else {
-		// We've already read 1 byte for the packet id
-		restSize := packetInfo.Size - ByteSize
-		restData := make([]byte, restSize)
-		n, err := p.r.Read(restData)
-		if err != nil && err == io.EOF {
-			return nil, fmt.Errorf("kyubu: EOF reading packet %#.2x, got %d", id, n)
-		} else if err != nil {
-			return nil, err
-		} else if n != restSize {
-			// We still want `delta` bytes. Let's try to get them.
-			delta := restSize - n
-			rest := make([]byte, delta)
-
-			an, err := p.r.Read(rest)
-			if err != nil {
-				return nil, fmt.Errorf("kyubu: Error reading packet %#.2x: %s", id, err)
-			}
-			// Slice so we don't accidentally overflow the packet size.
-			restData = append(restData[:n], rest...)
-			n += an
-		}
-
-		if n != restSize {
-			return nil, fmt.Errorf("kyubu: got %d bytes, wanted %d, reading packet %#.2x", n+1, packetInfo.Size, id)
-		}
-
-		// Ensure we've also got the packet id.
-		packetData = append([]byte{id}, restData...)
-	}
-
-	packet, err := packetInfo.Read(packetData)
+func (p *Parser) Next() (Packet, error) {
+	length, err := ReadVarint(p.r)
 	if err != nil {
 		return nil, err
+	}
+
+	if length < 0 {
+		return nil, ErrNegativeLength
+	}
+
+	b := make([]byte, length)
+	if _, err := io.ReadFull(p.r, b); err != nil {
+		return nil, err
+	}
+
+	r := bytes.NewBuffer(b)
+
+	if p.CompressionThreshold >= 0 {
+		// TODO
+	}
+
+	id, err := ReadVarint(r)
+	if err != nil {
+		return nil, err
+	}
+
+	f, ok := Packets[p.State][p.Direction.Flip()][byte(id)]
+	if !ok {
+		return nil, fmt.Errorf("kyubu: unknown packet %s:%#.2x", p.State, id)
+	}
+
+	packet := f()
+
+	if err := packet.Decode(r); err != nil {
+		return nil, err
+	}
+
+	if r.Len() > 0 {
+		return nil, fmt.Errorf("kyubu: Lost sync on packet %s:%#.2x, %d bytes left", p.State, id, r.Len())
 	}
 
 	return packet, nil
 }
 
-func NewParser(r io.Reader, dir PacketDirection) Parser {
-	return &parser{
-		r:         r,
-		direction: dir,
+func NewParser(r io.Reader, state State, dir PacketDirection) *Parser {
+	return &Parser{
+		r: r,
+
+		State:     state,
+		Direction: dir,
+
+		CompressionThreshold: -1,
 	}
 }

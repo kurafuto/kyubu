@@ -13,22 +13,18 @@ import (
 
 var Endianness = binary.BigEndian
 
-/* Eventually we'll just need these:
-type Chunk x
-type Metadata x
-type Slot x
-type ObjectData x
-type NBT x
-//type Position uint64
-//type Angle x
-type UUID x
-*/
-
 // (>= 1, <= 5) -2147483648 to 2147483647
 type VarInt int32
 
 // (>= 1, <= 10) -9223372036854775808 to 9223372036854775807
 type VarLong int64
+
+// TODO: these are just placeholders
+type Chunk bool
+type Metadata bool
+type Slot bool
+type ObjectData bool
+type NBT bool
 
 // (8) x (-33554432 to 33554431), y (-2048 to 2047), z (-33554432 to 33554431)
 // x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer
@@ -58,6 +54,8 @@ func (p Position) String() string {
 // (1) Rotation angle in steps of 1/256 of a full turn
 // Unsigned to get 0-255, rather than -128 to 127
 type Angle uint8
+
+type UUID [16]byte
 
 ///////////////////////////////////////////////////////
 // NOTE: Copied + modified from Go stdlib source code.

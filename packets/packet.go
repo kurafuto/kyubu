@@ -24,6 +24,16 @@ const (
 // This will change what the parser reads, depending on its direction.
 type PacketDirection int
 
+func (p *PacketDirection) Flip() PacketDirection {
+	if *p == ServerBound {
+		return ClientBound
+	} else if *p == ClientBound {
+		return ServerBound
+	} else {
+		return Anomalous
+	}
+}
+
 // ServerBound and ClientBound let us designate a parser's direction. This
 // defines what kind of packets it'll parse/serialize.
 const (
@@ -43,10 +53,21 @@ const (
 
 type Packet interface {
 	Id() byte
-	Encode() func(io.Writer) error
-	Decode() func(io.Writer) error
+	Encode(io.Writer) error
+	Decode(io.Reader) error
 }
 
+// TODO: This crap.
+type PacketFunc func() Packet
+
+var Packets [4][3]map[byte]PacketFunc
+
+func Register(state State, dir PacketDirection, id byte, f PacketFunc) {
+	Packets[state][dir][id] = f
+}
+
+/*
+// TODO: Remove below
 var (
 	// ServerPackets is a map of packet ids to serverbound packets.
 	ServerPackets = map[byte]*PacketInfo{}
@@ -59,17 +80,6 @@ var (
 	AnomalousPackets = map[byte]*PacketInfo{}
 )
 
-/*// TODO: This crap.
-type PacketFunc func() Packet
-
-var Packets
-
-func Register(state State, dir PacketDirection, p Packet, f PacketFunc) {
-
-}
-*/
-
-// TODO: Remove
 type PacketInfo struct {
 	Id   byte
 	Name string // Human presentable
@@ -92,6 +102,7 @@ func Register(p *PacketInfo) {
 		AnomalousPackets[p.Id] = p
 	}
 }
+*/
 
 // PacketWrapper wraps an array of bytes into a bytes.Buffer, and exposes
 // various Read/Write type helpers. It also optionally (and by default) strips
