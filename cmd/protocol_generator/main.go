@@ -27,8 +27,8 @@ type packet struct {
 	// The name of the packet we're working with.
 	// Used to register and generate parse/serialize code.
 	name string
+	//
 	spec *ast.StructType
-	// XXX
 }
 
 func errWrap(x string, y ...interface{}) string {
@@ -40,8 +40,8 @@ func errWrap(x string, y ...interface{}) string {
 var (
 	file        = flag.String("file", "packets.go", "The file containing packet definitions")
 	output      = flag.String("output", "", "Output file. If empty, ${file}_proto.go")
-	direction   = flag.String("direction", "Anomalous", "The packet direction: serverbound, clientbound, anomalous")
-	state       = flag.String("state", "", "Hint of state that the packet is used in")
+	direction   = flag.String("direction", "anomalous", "The packet direction: serverbound, clientbound, anomalous")
+	state       = flag.String("state", "", "State that the packet is used in")
 	packageName = flag.String("package", "", "The name of the package the output will end up in")
 )
 
@@ -76,6 +76,7 @@ func main() {
 			continue
 		}
 
+		// Make sure we have 1 type declaration
 		if decl.Tok != token.TYPE || len(decl.Specs) != 1 {
 			continue
 		}
@@ -117,8 +118,8 @@ func main() {
 	for _, p := range packets {
 		t := "t" // func (t *T) ...
 
-		en := Encoder{p, t, 0}
-		de := Decoder{p, t, 0}
+		en := Encoder{p: p, t: t, tmpPrefix: "tmp"}
+		de := Decoder{p: p, t: t, tmpPrefix: "tmp"}
 
 		// Id() byte
 		fmt.Fprintf(&buf, "func (%s *%s) Id() byte {\nreturn %#.2x // %d\n}\n\n", t, p.name, p.id, p.id)
@@ -134,8 +135,8 @@ func main() {
 		fmt.Fprintf(&buf, "return\n}\n\n")
 	}
 
+	// TODO: Make sure we need all these.
 	imports["encoding/binary"] = struct{}{}
-	// TODO: Make sure we need this
 	imports["github.com/sysr-q/kyubu/packets"] = struct{}{}
 	imports["io"] = struct{}{}
 

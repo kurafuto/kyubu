@@ -9,12 +9,13 @@ type Encoder struct {
 	p packet
 	t string
 
-	tmpCount int
+	tmpPrefix string
+	tmpCount  int
 }
 
 func (en *Encoder) T() string {
 	en.tmpCount++
-	return fmt.Sprintf("tmp%d", en.tmpCount-1)
+	return fmt.Sprintf("%s%d", en.tmpPrefix, en.tmpCount-1)
 }
 
 func (en *Encoder) Write() {

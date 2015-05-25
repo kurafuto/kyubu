@@ -9,12 +9,13 @@ type Decoder struct {
 	p packet
 	t string
 
-	tmpCount int
+	tmpPrefix string
+	tmpCount  int
 }
 
 func (de *Decoder) T() string {
 	de.tmpCount++
-	return fmt.Sprintf("tmp%d", de.tmpCount)
+	return fmt.Sprintf("%s%d", de.tmpPrefix, de.tmpCount-1)
 }
 
 func (de *Decoder) Write() {

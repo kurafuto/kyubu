@@ -1,5 +1,5 @@
 // ARR, HERE BE DRAGONS! DO NOT EDIT
-// protocol_generator -file=blah.go -direction=anomalous -state=handshake -package=main
+// protocol_generator -file=test.go -direction=anomalous -state=handshake -package=main
 
 package main
 
@@ -111,11 +111,11 @@ func (t *TestPacket) Encode(ww io.Writer) (err error) {
 
 func (t *TestPacket) Decode(rr io.Reader) (err error) {
 	// Decoding: b (bool)
-	var tmp1 [1]byte
-	if _, err = rr.Read(tmp1[:1]); err != nil {
+	var tmp0 [1]byte
+	if _, err = rr.Read(tmp0[:1]); err != nil {
 		return
 	}
-	t.b = tmp1[0] == 0x01
+	t.b = tmp0[0] == 0x01
 
 	// Decoding: i8 (int8)
 	if err = binary.Read(rr, binary.BigEndian, t.i8); err != nil {
@@ -158,18 +158,18 @@ func (t *TestPacket) Decode(rr io.Reader) (err error) {
 	}
 
 	// Decoding: V32 (packets.VarInt)
+	tmp1, err := packets.ReadVarint(rr)
+	if err != nil {
+		return
+	}
+	t.V32 = packets.VarInt(tmp1)
+
+	// Decoding: V64 (packets.VarLong)
 	tmp2, err := packets.ReadVarint(rr)
 	if err != nil {
 		return
 	}
-	t.V32 = packets.VarInt(tmp2)
-
-	// Decoding: V64 (packets.VarLong)
-	tmp3, err := packets.ReadVarint(rr)
-	if err != nil {
-		return
-	}
-	t.V64 = packets.VarLong(tmp3)
+	t.V64 = packets.VarLong(tmp2)
 
 	// Decoding: C (packets.Chunk)
 
