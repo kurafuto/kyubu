@@ -5,7 +5,7 @@ package main
 
 import (
 	"encoding/binary"
-	"github.com/sysr-q/kyubu/packets"
+	"github.com/kurafuto/kyubu/packets"
 	"io"
 )
 

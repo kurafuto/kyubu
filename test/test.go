@@ -1,7 +1,7 @@
 //go:generate protocol_generator -file=$GOFILE -direction=anomalous -state=handshake -package=main
 package main
 
-import "github.com/sysr-q/kyubu/packets"
+import "github.com/kurafuto/kyubu/packets"
 
 // This packet contains all the types that protocol_generator can work with.
 // It basically exists to make sure the output is type safe and compilable.

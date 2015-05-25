@@ -137,7 +137,7 @@ func main() {
 
 	// TODO: Make sure we need all these.
 	imports["encoding/binary"] = struct{}{}
-	imports["github.com/sysr-q/kyubu/packets"] = struct{}{}
+	imports["github.com/kurafuto/kyubu/packets"] = struct{}{}
 	imports["io"] = struct{}{}
 
 	var header bytes.Buffer

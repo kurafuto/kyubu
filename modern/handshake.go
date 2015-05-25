@@ -2,7 +2,7 @@
 
 package modern
 
-import "github.com/sysr-q/kyubu/packets"
+import "github.com/kurafuto/kyubu/packets"
 
 // Packet ID: 0x00
 type Handshake struct {
