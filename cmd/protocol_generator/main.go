@@ -53,7 +53,6 @@ var (
 var (
 	packets []packet
 	imports = map[string]struct{}{}
-	buf     bytes.Buffer
 )
 
 func main() {
@@ -115,11 +114,13 @@ func main() {
 		})
 	}
 
+	var buf bytes.Buffer
+
 	for _, p := range packets {
 		t := "t" // func (t *T) ...
 
-		en := Encoder{p: p, t: t, tmpPrefix: "tmp"}
-		de := Decoder{p: p, t: t, tmpPrefix: "tmp"}
+		en := NewEncoder(p, &buf)
+		de := NewDecoder(p, &buf)
 
 		// Id() byte
 		fmt.Fprintf(&buf, "func (%s *%s) Id() byte {\nreturn %#.2x // %d\n}\n\n", t, p.name, p.id, p.id)

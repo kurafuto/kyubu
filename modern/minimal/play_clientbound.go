@@ -47,15 +47,15 @@ type Player struct {
 	DisplayName    packets.Chat `if:".HasDisplayName"`
 
 	// Action == 0 (add player)
-	// Name, Properties, Gamemode, Ping, HasDisplayName, DisplayName
+	//  Name, Properties, Gamemode, Ping, HasDisplayName, DisplayName
 	// Action == 1 (update gamemode)
-	// Gamemode
+	//  Gamemode
 	// Action == 2 (update latency)
-	// Ping
+	//  Ping
 	// Action == 3 (update display name)
-	// HasDisplayName, DisplayName
+	//  HasDisplayName, DisplayName
 	// Action == 4 (remove player)
-	// [no fields]
+	//  [no fields]
 }
 
 type Property struct {
