@@ -19,12 +19,16 @@ type VarInt int32
 // (>= 1, <= 10) -9223372036854775808 to 9223372036854775807
 type VarLong int64
 
-// TODO: these are just placeholders
+// Realistically, Chat is a big chunk of JSON.
+type Chat string
+
+/* // TODO: Implement these placeholders.
 type Chunk bool
 type Metadata bool
 type Slot bool
 type ObjectData bool
 type NBT bool
+*/
 
 // (8) x (-33554432 to 33554431), y (-2048 to 2047), z (-33554432 to 33554431)
 // x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer

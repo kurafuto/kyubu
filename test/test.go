@@ -22,12 +22,37 @@ type TestPacket struct {
 	// Custom types
 	V32 packets.VarInt
 	V64 packets.VarLong
-	C   packets.Chunk
-	M   packets.Metadata
-	S   packets.Slot
-	O   packets.ObjectData
-	N   packets.NBT
+	CH  packets.Chat
 	P   packets.Position
 	A   packets.Angle
 	U   packets.UUID
+
+	// These aren't implemented, probably gonna error.
+	/*
+		C packets.Chunk
+		M packets.Metadata
+		S packets.Slot
+		O packets.ObjectData
+		N packets.NBT
+	*/
+}
+
+// This packet just tests nesting structs for "complex" (eh..) packets.
+// Not really required now, but it's implemented in the generator.
+// Should end up like: t.T.X = ...
+//
+// Packet ID: 0xfd
+type Test struct {
+	T struct {
+		X uint16
+		Y string
+		Z packets.VarInt
+	}
+	TXs []TX `length:"packets.VarInt"`
+}
+
+type TX struct {
+	X uint16
+	Y string
+	Z packets.VarInt
 }

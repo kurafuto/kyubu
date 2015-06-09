@@ -34,7 +34,7 @@ type packet struct {
 func errWrap(x string, y ...interface{}) string {
 	z := fmt.Sprintf(x, y...)
 	// err has to be predefined.
-	return fmt.Sprintf("if err = %s; err != nil {\nreturn\n}\n", z)
+	return fmt.Sprintf("if err = %s; err != nil { return err }\n", z)
 }
 
 var (
@@ -52,7 +52,9 @@ var (
 
 var (
 	packets []packet
-	imports = map[string]struct{}{}
+	// A packet struct might reference one of these types.
+	nonPackets = map[string]*ast.StructType{}
+	imports    = map[string]struct{}{}
 )
 
 func main() {
@@ -96,6 +98,7 @@ func main() {
 
 		if pos == -1 {
 			log.Printf("Couldn't find packet ID for type: %s\n", spec.Name.Name)
+			nonPackets[spec.Name.Name] = spec.Type.(*ast.StructType)
 			continue
 		}
 

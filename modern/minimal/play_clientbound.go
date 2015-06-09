@@ -62,7 +62,7 @@ type Property struct {
 	Name      string
 	Value     string
 	Signed    bool
-	Signature `if:".Signed"`
+	Signature string `if:".Signed"`
 }
 
 // Packet ID: 0x3A

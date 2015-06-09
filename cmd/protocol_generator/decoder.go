@@ -38,26 +38,16 @@ func (de *Decoder) Write() {
 
 func (de *Decoder) writeStruct(spec *ast.StructType, name string) {
 	for _, field := range spec.Fields.List {
-		// TODO: Parse field.Tag.Value -> reflect.StructTag
 		tag := reflect.StructTag("")
+		if field.Tag != nil {
+			tag = reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
+		}
+
+		// TODO: Parse tag.Get("if")
 
 		for _, n := range field.Names {
 			de.writeType(field.Type, fmt.Sprintf("%s.%s", name, n), tag)
 		}
-
-		/*
-			var typeName string
-
-			if ide, ok := field.Type.(*ast.Ident); ok {
-				typeName = ide.Name
-			} else if selx, ok := field.Type.(*ast.SelectorExpr); ok {
-				typeName = selx.X.(*ast.Ident).Name + "." + selx.Sel.Name
-			} else if t, ok := field.Type.(*ast.ArrayType); ok {
-				typeName = "[]" + t.Elt.(*ast.Ident).Name
-			}
-
-			fmt.Fprintf(de.buf, "// Decoding: %s (%s)\n", name, typeName)
-		*/
 	}
 }
 
@@ -72,9 +62,45 @@ func (de *Decoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 	case *ast.Ident:
 		de.writeField(e.Name, name, tag)
 	case *ast.ArrayType:
-		// TODO
+		lT := tag.Get("length") // length type
+		if lT == "rest" {
+			imports["io/ioutil"] = struct{}{}
+			fmt.Fprintf(de.buf, "if %s, err = ioutil.ReadAll(rr); err != nil { return }\n", name)
+			return
+		}
+
+		// length variable to read into
+		lv := de.T()
+		fmt.Fprintf(de.buf, "var %s %s\n", lv, lT)
+		de.writeField(lT, lv, "")
+
+		// TODO: Check for length > math.MaxInt16?
+
+		imports["fmt"] = struct{}{}
+		fmt.Fprintf(de.buf, `if %s < 0 {
+				return fmt.Errorf("negative array size: %%d < 0", %s)
+			}`, lv, lv)
+
+		fmt.Fprintf(de.buf, "\n%s = make([]%s, %s)\n", name, e.Elt, lv)
+
+		if i, ok := e.Elt.(*ast.Ident); ok && (i.Name == "byte" || i.Name == "uint8") {
+			fmt.Fprintf(de.buf, "if _, err = rr.Read(%s); err != nil { return err }\n", name)
+		}
+
+		iv := de.T()
+		fmt.Fprintf(de.buf, "for %s := range %s {\n", iv, name)
+
+		// Sneaky trick so we can use "unknown-ish" structs ([]T) and still get at their fields.
+		sName := e.Elt.(*ast.Ident).Name
+		if xx, ok := nonPackets[sName]; ok {
+			de.writeType(xx, fmt.Sprintf("%s[%s]", name, iv), tag)
+		} else {
+			fmt.Fprintf(de.buf, "// Can't find supporting struct %s for %s.%s\n", sName, de.p.name, name)
+		}
+
+		fmt.Fprint(de.buf, "}\n")
 	default:
-		fmt.Fprintf(de.buf, "// Unable to decode: %s (%T)\n", name, e)
+		fmt.Fprintf(de.buf, "// Unable to decode: %s (type: %T)\n", name, e)
 	}
 }
 
@@ -84,7 +110,7 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 	case "bool":
 		tmp := de.T() // byte value for bool
 		fmt.Fprintf(de.buf, "var %s [1]byte\n", tmp)
-		fmt.Fprintf(de.buf, "if _, err = rr.Read(%s[:1]); err != nil {\nreturn\n}\n", tmp)
+		fmt.Fprintf(de.buf, "if _, err = rr.Read(%s[:1]); err != nil { return err }\n", tmp)
 		fmt.Fprintf(de.buf, "%s = %s[0] == 0x01\n", name, tmp)
 	case "int8", "uint8", "int16", "uint16", "int32", "int64", "float32", "float64":
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
@@ -96,10 +122,10 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 		x := de.T() // num of bytes read
 
 		fmt.Fprintf(de.buf, "%s, err := packets.ReadVarint(rr)\n", n)
-		fmt.Fprintf(de.buf, "if err != nil {\nreturn\n}\n")
+		fmt.Fprintf(de.buf, "if err != nil { return err}\n")
 		fmt.Fprintf(de.buf, "%s := make([]byte, %s)\n", b, n)
 		fmt.Fprintf(de.buf, "%s, err := rr.Read(%s)\n", x, b)
-		fmt.Fprintf(de.buf, "if err != nil {\nreturn\n} ")
+		fmt.Fprintf(de.buf, "if err != nil { return err } ")
 		fmt.Fprintf(de.buf, "else if int64(%s) != %s {\n", x, n)
 		// TODO: delta := n - n1; Read(b, delta) ...
 		fmt.Fprintf(de.buf, `return errors.New("didn't read enough bytes for string")`+"\n")
@@ -108,17 +134,20 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 	case "packets.VarInt":
 		n := de.T()
 		fmt.Fprintf(de.buf, "%s, err := packets.ReadVarint(rr)\n", n)
-		fmt.Fprintf(de.buf, "if err != nil {\nreturn\n}\n")
+		fmt.Fprintf(de.buf, "if err != nil { return err }\n")
 		fmt.Fprintf(de.buf, "%s = packets.VarInt(%s)\n", name, n)
 	case "packets.VarLong":
 		n := de.T()
 		fmt.Fprintf(de.buf, "%s, err := packets.ReadVarint(rr)\n", n)
-		fmt.Fprintf(de.buf, "if err != nil {\nreturn\n}\n")
+		fmt.Fprintf(de.buf, "if err != nil { return err }\n")
 		fmt.Fprintf(de.buf, "%s = packets.VarLong(%s)\n", name, n)
 	case "packets.Position", "packets.Angle":
+		// TODO: Do we need to take &%s so it reads into var?
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
 	case "packets.UUID":
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
+	case "packets.Chat":
+		// TODO
 
 	case "packets.Chunk":
 		fallthrough
@@ -131,7 +160,7 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 	case "packets.NBT":
 		fallthrough
 	default:
-		fmt.Fprintf(de.buf, "// Unable to decode: %s (%s)\n", name, t)
+		fmt.Fprintf(de.buf, "// Unable to decode: %s (%s)", name, t)
 	}
 
 	fmt.Fprintf(de.buf, "\n")
