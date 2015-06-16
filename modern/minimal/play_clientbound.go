@@ -74,8 +74,8 @@ type ServerTabComplete struct {
 type ScoreboardObjective struct {
 	Name  string
 	Mode  uint8
-	Value string `if:".Mode == 0 .Mode == 2"`
-	Type  string `if:".Mode == 0 .Mode == 2"`
+	Value string `if:".Mode == 0 || .Mode == 2"`
+	Type  string `if:".Mode == 0 || .Mode == 2"`
 }
 
 // Packet ID: 0x3C
@@ -97,13 +97,13 @@ type Teams struct {
 	Name string
 	// 0 = create, 1 = remove, 2 = update, 3 = add players, 4 = remove players
 	Mode              int8
-	Display           string   `if:".Mode == 0 .Mode == 2"`
-	Prefix            string   `if:".Mode == 0 .Mode == 2"`
-	Suffix            string   `if:".Mode == 0 .Mode == 2"`
-	FriendlyFire      int8     `if:".Mode == 0 .Mode == 2"`
-	NameTagVisibility string   `if:".Mode == 0 .Mode == 2"`
-	Color             int8     `if:".Mode == 0 .Mode == 2"`
-	Players           []string `length:"packets.VarInt" if:".Mode == 0 .Mode == 3 .Mode == 4"`
+	Display           string   `if:".Mode == 0 || .Mode == 2"`
+	Prefix            string   `if:".Mode == 0 || .Mode == 2"`
+	Suffix            string   `if:".Mode == 0 || .Mode == 2"`
+	FriendlyFire      int8     `if:".Mode == 0 || .Mode == 2"`
+	NameTagVisibility string   `if:".Mode == 0 || .Mode == 2"`
+	Color             int8     `if:".Mode == 0 || .Mode == 2"`
+	Players           []string `length:"packets.VarInt" if:".Mode == 0 || .Mode == 3 || .Mode == 4"`
 }
 
 // Packet ID: 0x3F

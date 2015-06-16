@@ -7,5 +7,7 @@ type X struct {
 }
 
 type Y struct {
-	b bool
+	A bool
+	B int8
+	C int32 `if:".A && .B == 1"`
 }

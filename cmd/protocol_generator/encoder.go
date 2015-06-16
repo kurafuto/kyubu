@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"reflect"
+	"strings"
 )
 
 type Encoder struct {
@@ -43,10 +44,21 @@ func (en *Encoder) writeStruct(spec *ast.StructType, name string) {
 			tag = reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
 		}
 
-		// TODO: Parse tag.Get("if")
+		var c string
+		if tag.Get("if") != "" {
+			c = strings.Replace(tag.Get("if"), ".", name+".", -1)
+		}
+
+		if c != "" {
+			fmt.Fprintf(en.buf, "if %s {\n", c)
+		}
 
 		for _, n := range field.Names {
 			en.writeType(field.Type, fmt.Sprintf("%s.%s", name, n), tag)
+		}
+
+		if c != "" {
+			fmt.Fprint(en.buf, "}\n")
 		}
 	}
 }

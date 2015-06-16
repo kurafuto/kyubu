@@ -27,13 +27,23 @@ func (t *X) Encode(ww io.Writer) (err error) {
 
 	for tmp2 := range t.Ys {
 		tmp3 := byte(0)
-		if t.Ys[tmp2].b {
+		if t.Ys[tmp2].A {
 			tmp3 = byte(1)
 		}
 		if err = binary.Write(ww, binary.BigEndian, tmp3); err != nil {
 			return err
 		}
 
+		if err = binary.Write(ww, binary.BigEndian, t.Ys[tmp2].B); err != nil {
+			return err
+		}
+
+		if t.Ys[tmp2].A && t.Ys[tmp2].B == 1 {
+			if err = binary.Write(ww, binary.BigEndian, t.Ys[tmp2].C); err != nil {
+				return err
+			}
+
+		}
 	}
 	return
 }
@@ -55,8 +65,18 @@ func (t *X) Decode(rr io.Reader) (err error) {
 		if _, err = rr.Read(tmp3[:1]); err != nil {
 			return err
 		}
-		t.Ys[tmp2].b = tmp3[0] == 0x01
+		t.Ys[tmp2].A = tmp3[0] == 0x01
 
+		if err = binary.Read(rr, binary.BigEndian, t.Ys[tmp2].B); err != nil {
+			return err
+		}
+
+		if t.Ys[tmp2].A && t.Ys[tmp2].B == 1 {
+			if err = binary.Read(rr, binary.BigEndian, t.Ys[tmp2].C); err != nil {
+				return err
+			}
+
+		}
 	}
 	return
 }
