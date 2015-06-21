@@ -6,7 +6,7 @@ import "github.com/kurafuto/kyubu/packets"
 
 // Packet ID: 0x00
 type LoginDisconnect struct {
-	Reason packets.Chat
+	Reason packets.Chat `as:"json"`
 }
 
 // Packet ID: 0x01

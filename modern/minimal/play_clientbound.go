@@ -17,7 +17,7 @@ type JoinGame struct {
 
 // Packet ID: 0x02
 type ServerMessage struct {
-	Data     packets.Chat
+	Data     packets.Chat `as:"json"`
 	Position int8
 }
 
@@ -44,7 +44,7 @@ type Player struct {
 	Gamemode       packets.VarInt
 	Ping           packets.VarInt
 	HasDisplayName bool
-	DisplayName    packets.Chat `if:".HasDisplayName"`
+	DisplayName    packets.Chat `as:"json" if:".HasDisplayName"`
 
 	// Action == 0 (add player)
 	//  Name, Properties, Gamemode, Ping, HasDisplayName, DisplayName
@@ -114,7 +114,7 @@ type ServerPluginMessage struct {
 
 // Packet ID: 0x40
 type Disconnect struct {
-	Reason packets.Chat
+	Reason packets.Chat `as:"json"`
 }
 
 // Packet ID: 0x46
