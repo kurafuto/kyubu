@@ -9,9 +9,9 @@ Currently, Kyubu is separated into a few logical parts:
 * `kyubu/packets` - packet parser/serializer stuff
 	* ~~`kyubu/modern` - Modern (1.8.3/47) packets~~ - not implemented yet.
 	* `kyubu/modern/minimal` - Minimal modern (1.8.3/47) packet definitions.
-		Enough for Kurafuto to function, but not everything.
+		Enough for [Kurafuto](https://github.com/kurafuto/kurafuto) to function, but not everything.
 * `kyubu/chunk` - chunk/block related stuff
-* `kyubu/test` - test packet definition for protocol_generator
+* `kyubu/test` - test packet definitions for protocol_generator
 
 ## Extending Kyubu
 
@@ -43,19 +43,17 @@ NOTE: It's heavily based off of the protocol_generator from
 ## Roadmap
 
 * __Urgent__:
-* Fix up `packets.Chat` type so it works.
-* Add `as:"json"` decoding/encoding to protocol_generator
-* Add `if:".X == Y"` parsing to protocol_generator.
-
-----
-
-* Make sure the chunk decompression still works with modern Minecraft. I wrote
+* [ ] Fix up `packets.Chat` type so it works.
+* [ ] Add `as:"json"` decoding/encoding to protocol_generator
+* [x] Add `if:".X == Y"` parsing to protocol_generator.
+*
+* [ ] Make sure the chunk decompression still works with modern Minecraft. I wrote
 	it for Classic.
-* Add some magical `generic packet` that just skips `length` bytes into a
+* [ ] Add some magical `generic packet` that just skips `length` bytes into a
 	`[]byte`, so we can ignore some packets if needed.
-* Actually get around to implementing all the types, as well as `kyubu/modern`.
-* Add tests that work for `protocol_generator` and the packet stuff.
-* Documentation and better examples.
+* [ ] Actually get around to implementing all the types, as well as `kyubu/modern`.
+* [ ] Add tests that work for `protocol_generator` and the packet stuff.
+* [ ] Documentation and better examples.
 
 ## Tests
 
