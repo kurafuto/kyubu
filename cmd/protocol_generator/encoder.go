@@ -81,6 +81,7 @@ func (en *Encoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 
 		if i, ok := e.Elt.(*ast.Ident); ok && (i.Name == "byte" || i.Name == "uint8") {
 			fmt.Fprintf(en.buf, "if _, err = ww.Write(%s); err != nil { return err }\n", name)
+			return
 		}
 
 		iv := en.T()
@@ -90,6 +91,8 @@ func (en *Encoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 		sName := e.Elt.(*ast.Ident).Name
 		if xx, ok := nonPackets[sName]; ok {
 			en.writeType(xx, fmt.Sprintf("%s[%s]", name, iv), tag)
+		} else if sName == "string" {
+			en.writeField(sName, fmt.Sprintf("%s[%s]", name, iv), tag)
 		} else {
 			fmt.Fprintf(en.buf, "// Can't find supporting struct %s for %s.%s\n", sName, en.p.name, name)
 		}
@@ -101,8 +104,23 @@ func (en *Encoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 }
 
 func (en *Encoder) writeField(t, name string, tag reflect.StructTag) {
-	// TODO: For ints, unwrap binary.Write() trickery to reuse []byte tmp.
+	as := tag.Get("as")
+	if as != "" {
+		switch as {
+		case "json":
+			imports["encoding/json"] = struct{}{}
+			t := en.T()
+			fmt.Fprintf(en.buf, `var %[1]s []byte
+			if %[1]s, err = json.Marshal(&%[2]s); err != nil { return err }
+			if err = packets.WriteString(ww, string(%[1]s)); err != nil { return err }
+			`, t, name)
+		default:
+			fmt.Fprintf(en.buf, "// Can't 'as' %s\n", as)
+		}
+		return
+	}
 
+	// TODO: For ints, unwrap binary.Write() trickery to reuse []byte tmp.
 	switch t {
 	case "bool":
 		tmp := en.T() // byte value for bool

@@ -61,6 +61,38 @@ type Angle uint8
 
 type UUID [16]byte
 
+func ReadString(r io.Reader) (string, error) {
+	n, err := ReadVarint(r)
+	if err != nil {
+		return "", err
+	}
+
+	b := make([]byte, n)
+	x, err := r.Read(b)
+
+	if err != nil {
+		return "", err
+	} else if int64(x) != n { // TODO: Needed?
+		return "", errors.New("didn't read enough bytes for string")
+	}
+
+	return string(b), nil
+}
+
+func WriteString(w io.Writer, s string) error {
+	x := make([]byte, binary.MaxVarintLen32)
+	b := []byte(s)
+	n := PutVarint(x, int64(len(b)))
+	if err := binary.Write(w, Endianness, x[:n]); err != nil {
+		return err
+	}
+	if err := binary.Write(w, Endianness, b); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 ///////////////////////////////////////////////////////
 // NOTE: Copied + modified from Go stdlib source code.
 // Copyright 2011 The Go Authors.  All rights reserved.

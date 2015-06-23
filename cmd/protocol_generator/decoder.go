@@ -97,6 +97,7 @@ func (de *Decoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 
 		if i, ok := e.Elt.(*ast.Ident); ok && (i.Name == "byte" || i.Name == "uint8") {
 			fmt.Fprintf(de.buf, "if _, err = rr.Read(%s); err != nil { return err }\n", name)
+			return
 		}
 
 		iv := de.T()
@@ -106,6 +107,8 @@ func (de *Decoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 		sName := e.Elt.(*ast.Ident).Name
 		if xx, ok := nonPackets[sName]; ok {
 			de.writeType(xx, fmt.Sprintf("%s[%s]", name, iv), tag)
+		} else if sName == "string" {
+			de.writeField(sName, fmt.Sprintf("%s[%s]", name, iv), tag)
 		} else {
 			fmt.Fprintf(de.buf, "// Can't find supporting struct %s for %s.%s\n", sName, de.p.name, name)
 		}
@@ -117,6 +120,22 @@ func (de *Decoder) writeType(e ast.Expr, name string, tag reflect.StructTag) {
 }
 
 func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
+	as := tag.Get("as")
+	if as != "" {
+		switch as {
+		case "json":
+			imports["encoding/json"] = struct{}{}
+			t := de.T()
+			fmt.Fprintf(de.buf, `var %[1]s string
+				if %[1]s, err = packets.ReadString(rr); err != nil { return err }
+				if err = json.Unmarshal([]byte(%[1]s), &%[2]s); err != nil { return err }
+			`, t, name)
+		default:
+			fmt.Fprintf(de.buf, "// Can't 'as' %s\n", as)
+		}
+		return
+	}
+
 	// TODO: For ints, unwrap binary.Read() trickery to reuse []byte tmp.
 	switch t {
 	case "bool":
