@@ -44,7 +44,7 @@ NOTE: It's heavily based off of the protocol_generator from
 
 * __Urgent__:
 * [ ] Fix up `packets.Chat` type so it works.
-* [ ] Add `as:"json"` decoding/encoding to protocol_generator
+* [x] Add `as:"json"` decoding/encoding to protocol_generator
 * [x] Add `if:".X == Y"` parsing to protocol_generator.
 * [ ] Add `StatusReply` field to `status_clientbound.go`
 *
