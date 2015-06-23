@@ -1,4 +1,4 @@
-package minimal
+package modern
 
 import (
 	"encoding/binary"

@@ -1,6 +1,6 @@
-//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=status -package=minimal
+//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=status -package=modern
 
-package minimal
+package modern
 
 // Packet ID: 0x00
 type StatusRequest struct {

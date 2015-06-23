@@ -1,6 +1,6 @@
-//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=login -package=minimal
+//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=login -package=modern
 
-package minimal
+package modern
 
 // Packet ID: 0x00
 type LoginStart struct {

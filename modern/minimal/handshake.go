@@ -1,6 +1,6 @@
-//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=handshake -package=minimal
+//go:generate protocol_generator -file=$GOFILE -direction=serverbound -state=handshake -package=modern
 
-package minimal
+package modern
 
 import "github.com/kurafuto/kyubu/packets"
 
