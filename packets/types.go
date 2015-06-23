@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/kurafuto/kyubu/format"
 )
 
 var Endianness = binary.BigEndian
@@ -19,8 +21,7 @@ type VarInt int32
 // (>= 1, <= 10) -9223372036854775808 to 9223372036854775807
 type VarLong int64
 
-// Realistically, Chat is a big chunk of JSON.
-type Chat string
+type Chat format.AnyComponent
 
 /* // TODO: Implement these placeholders.
 type Chunk bool

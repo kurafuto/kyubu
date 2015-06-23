@@ -39,7 +39,7 @@ type PlayerListItem struct {
 
 type Player struct {
 	UUID           packets.UUID
-	Name           string     `if:".Action == 0"`
+	Name           string     `if:"t.Action == 0" noreplace:"true"`
 	Properties     []Property `length:"packets.VarInt"`
 	Gamemode       packets.VarInt
 	Ping           packets.VarInt

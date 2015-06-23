@@ -45,7 +45,7 @@ func (de *Decoder) writeStruct(spec *ast.StructType, name string) {
 		}
 
 		var c string
-		if tag.Get("if") != "" {
+		if tag.Get("if") != "" && tag.Get("noreplace") != "true" {
 			c = strings.Replace(tag.Get("if"), ".", name+".", -1)
 		}
 
@@ -177,9 +177,9 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
 	case "packets.UUID":
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
-	case "packets.Chat":
-		// TODO
 
+	case "packets.Chat":
+		// Covered by the 'as' switch above.
 	case "packets.Chunk":
 		fallthrough
 	case "packets.Metadata":
