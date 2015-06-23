@@ -46,9 +46,9 @@ func TestParseToEOF(t *testing.T) {
 */
 
 func TestParseFewBytes(t *testing.T) {
-	// Packet 0x13, Message, 66 bytes
-	b := bytes.NewBuffer([]byte{0x0d, 0x00, 0x00, 0x00})
-	p := NewParser(b, Anomalous)
+	// 0x03 -> Time Update
+	b := bytes.NewBuffer([]byte{0x03, 0x00, 0x00, 0x00})
+	p := NewParser(b, Play, ClientBound)
 
 	if _, err := p.Next(); err == nil {
 		t.Fatal("expected EOF, got nil")
@@ -57,7 +57,7 @@ func TestParseFewBytes(t *testing.T) {
 
 func TestInvalidPacketId(t *testing.T) {
 	b := bytes.NewBuffer([]byte{0xff, 0x00, 0x00, 0x00})
-	p := NewParser(b, Anomalous)
+	p := NewParser(b, Play, ClientBound)
 
 	if n, err := p.Next(); err == nil {
 		t.Fatalf("expected err for 0xff, got nil and packet: %#v", n)
@@ -72,7 +72,7 @@ func (r *errReader) Read(b []byte) (int, error) {
 }
 
 func TestParseIdErr(t *testing.T) {
-	p := NewParser(&errReader{io.ErrClosedPipe}, Anomalous)
+	p := NewParser(&errReader{io.ErrClosedPipe}, Play, ClientBound)
 
 	if _, err := p.Next(); err != io.ErrClosedPipe {
 		t.Fatalf("expected io.ErrClosedPipe, got %#v", err)
@@ -87,11 +87,10 @@ func (r *lessReader) Read(b []byte) (int, error) {
 }
 
 func TestParseIdLessBytes(t *testing.T) {
-	p := NewParser(&lessReader{}, Anomalous)
+	p := NewParser(&lessReader{}, Play, ClientBound)
 
 	_, err := p.Next()
-	expected := "kyubu: Read failed for id, wanted 1 bytes, got 0"
-	if err.Error() != expected {
-		t.Fatalf("expected %q, got %q", expected, err.Error())
+	if err != io.EOF {
+		t.Fatalf("expected io.EOF, got %s", err)
 	}
 }

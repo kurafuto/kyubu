@@ -2,6 +2,7 @@ package packets
 
 import (
 	"bytes"
+	"compress/zlib"
 	"errors"
 	"fmt"
 	"io"
@@ -18,7 +19,8 @@ type Parser struct {
 	Direction PacketDirection
 
 	CompressionThreshold int
-	//C <-chan Packet
+
+	zlibReader io.ReadCloser
 }
 
 func (p *Parser) Next() (Packet, error) {
@@ -36,10 +38,34 @@ func (p *Parser) Next() (Packet, error) {
 		return nil, err
 	}
 
-	r := bytes.NewBuffer(b)
+	r := bytes.NewReader(b)
 
 	if p.CompressionThreshold >= 0 {
-		// TODO
+		newSize, err := ReadVarint(r)
+		if err != nil {
+			return nil, err
+		}
+
+		if newSize != 0 {
+			if p.zlibReader == nil {
+				p.zlibReader, err = zlib.NewReader(r)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				err = p.zlibReader.(zlib.Resetter).Reset(r, nil)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			data := make([]byte, newSize)
+			_, err := io.ReadFull(p.zlibReader, data)
+			if err != nil {
+				return nil, err
+			}
+			r = bytes.NewReader(data)
+		}
 	}
 
 	id, err := ReadVarint(r)
