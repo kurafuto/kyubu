@@ -42,19 +42,11 @@ NOTE: It's heavily based off of the protocol_generator from
 
 ## Roadmap
 
-* __Urgent__:
-* [ ] Fix up `packets.Chat` type so it works.
-* [x] Add `as:"json"` decoding/encoding to protocol_generator
-* [x] Add `if:".X == Y"` parsing to protocol_generator.
-* [ ] Add `StatusReply` field to `status_clientbound.go`
-*
-* [ ] Make sure the chunk decompression still works with modern Minecraft. I wrote
-	it for Classic.
-* [ ] Add some magical `generic packet` that just skips `length` bytes into a
-	`[]byte`, so we can ignore some packets if needed.
-* [ ] Actually get around to implementing all the types, as well as `kyubu/modern`.
+* [ ] Make sure the chunk decompression still works with modern Minecraft.
+* [ ] Actually get around to implementing all the types/packets in `kyubu/modern`.
 * [ ] Add tests that work for `protocol_generator` and the packet stuff.
 * [ ] Documentation and better examples.
+* [ ] Update from 1.8.3/47 to 15w32a/52. (http://wiki.vg/Protocol_History)
 
 ## Tests
 
