@@ -3,6 +3,7 @@ package packets
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/binary"
 	"errors"
 	"io"
 	"net"
@@ -96,7 +97,6 @@ func (p *Parser) Recv() (Packet, error) {
 				}
 			} else {
 				// If we do, reset with the current packet.
-				// NOTE: This might not be efficient. Will have to test.
 				err = p.zlibReader.(zlib.Resetter).Reset(r, nil)
 				if err != nil {
 					return nil, err
@@ -144,8 +144,63 @@ func (p *Parser) Recv() (Packet, error) {
 // Send encodes (and compresses, if required) a packet, and sends it.
 func (p *Parser) Send(packet Packet) error {
 	p.conn.SetWriteDeadline(time.Now().Add(p.timeout))
-	// TODO
-	return nil
+
+	buf := &bytes.Buffer{}
+
+	// Write the packet ID, then encode it into the buffer.
+	if err := WriteVarint(buf, VarInt(packet.Id())); err != nil {
+		return err
+	}
+	if err := packet.Encode(buf); err != nil {
+		return err
+	}
+
+	uncompSize := 0
+	extra := 0 // Just in case we have to compress the packet.
+
+	// We only need to compress the packet if it's above the threshold.
+	if p.compressionThreshold >= 0 && buf.Len() > p.compressionThreshold {
+		// We're compressing the packet into this buffer.
+		cBuf := &bytes.Buffer{}
+
+		if p.zlibWriter == nil {
+			// If we don't already have a zlib writer, set one up.
+			p.zlibWriter, _ = zlib.NewWriterLevel(cBuf, zlib.BestSpeed)
+		} else {
+			p.zlibWriter.Reset(cBuf)
+		}
+
+		// Store the size it should end up being on the receiving end.
+		uncompSize = buf.Len()
+		extra = binary.Size(uncompSize)
+
+		if _, err := buf.WriteTo(p.zlibWriter); err != nil {
+			return err
+		}
+
+		// We have to close the zlib writer, otherwise it won't flush and
+		// actually compress the data.
+		if err := p.zlibWriter.Close(); err != nil {
+			return err
+		}
+
+		buf = cBuf
+	}
+
+	if err := WriteVarint(p.w, VarInt(buf.Len()+extra)); err != nil {
+		return err
+	}
+
+	if p.compressionThreshold >= 0 {
+		// If compression is on, tell them how big it should end up being.
+		if err := WriteVarint(p.w, VarInt(uncompSize)); err != nil {
+			return err
+		}
+	}
+
+	// Finally, the rest of the packet buffer.
+	_, err := buf.WriteTo(p.w)
+	return err
 }
 
 func (p *Parser) EnableEncryption(key []byte) error {
