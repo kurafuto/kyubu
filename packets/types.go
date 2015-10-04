@@ -94,6 +94,17 @@ func WriteString(w io.Writer, s string) error {
 	return nil
 }
 
+func WriteVarint(w io.Writer, v VarInt) error {
+	x := make([]byte, binary.MaxVarintLen32)
+	n := PutVarint(x, int64(v)) // XXX: Should we use VarLong instead?
+
+	if err := binary.Write(w, Endianness, x[:n]); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 ///////////////////////////////////////////////////////
 // NOTE: Copied + modified from Go stdlib source code.
 // Copyright 2011 The Go Authors.  All rights reserved.

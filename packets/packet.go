@@ -23,6 +23,8 @@ func (p *PacketDirection) Flip() PacketDirection {
 const (
 	ServerBound PacketDirection = iota
 	ClientBound
+	// Anomalous shouldn't come up usually. If it does, something is broken,
+	// and you'll probably want to panic() out.
 	Anomalous
 )
 
@@ -44,6 +46,10 @@ type Packet interface {
 // TODO: This crap.
 type PacketFunc func() Packet
 
+// Packets is a multidimensional array/map used to store packet factories.
+// [4] = how many states there are
+// [3] = how many directions there are
+// [b] = packet ID byte
 var Packets [4][3]map[byte]PacketFunc
 
 func Register(state State, dir PacketDirection, id byte, f PacketFunc) {

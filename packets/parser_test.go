@@ -22,23 +22,23 @@ func TestParseToEOF(t *testing.T) {
 	b := append(ident.Bytes(), level.Bytes()...)
 	p := NewParser(bytes.NewBuffer(b), ClientBound)
 
-	n, err := p.Next()
+	n, err := p.Recv()
 	if err != nil {
-		t.Fatal("round 1: parser.Next() error:", err)
+		t.Fatal("round 1: parser.Recv() error:", err)
 	}
 	if n.Id() != 0x00 {
 		t.Fatalf("round 1: expected packet 0x00, got %#.2x", n.Id())
 	}
 
-	n, err = p.Next()
+	n, err = p.Recv()
 	if err != nil {
-		t.Fatal("round 2: parser.Next() error:", err)
+		t.Fatal("round 2: parser.Recv() error:", err)
 	}
 	if n.Id() != 0x01 {
 		t.Fatalf("round 2: expected packet 0x01, got %#.2x", n.Id())
 	}
 
-	_, err = p.Next()
+	_, err = p.Recv()
 	if err != io.EOF {
 		t.Fatal("round 3: expected EOF, got", err)
 	}
@@ -46,52 +46,58 @@ func TestParseToEOF(t *testing.T) {
 */
 
 func TestParseFewBytes(t *testing.T) {
-	// Packet 0x13, Message, 66 bytes
-	b := bytes.NewBuffer([]byte{0x0d, 0x00, 0x00, 0x00})
-	p := NewParser(b, Anomalous)
+	// 0x03 -> Time Update
+	b := bytes.NewBuffer([]byte{0x03, 0x00, 0x00, 0x00})
+	p := NewParser(b, Play, ClientBound)
 
-	if _, err := p.Next(); err == nil {
+	if _, err := p.Recv(); err == nil {
 		t.Fatal("expected EOF, got nil")
 	}
 }
 
 func TestInvalidPacketId(t *testing.T) {
 	b := bytes.NewBuffer([]byte{0xff, 0x00, 0x00, 0x00})
-	p := NewParser(b, Anomalous)
+	p := NewParser(b, Play, ClientBound)
 
-	if n, err := p.Next(); err == nil {
+	if n, err := p.Recv(); err == nil {
 		t.Fatalf("expected err for 0xff, got nil and packet: %#v", n)
 	}
 }
 
-// This will always return an ErrClosedPipe on Read().
-type errReader struct{ Err error }
+type errReaderWriter struct{ Err error }
 
-func (r *errReader) Read(b []byte) (int, error) {
+func (r *errReaderWriter) Read(b []byte) (int, error) {
+	return 0, r.Err
+}
+
+func (r *errReaderWriter) Write(p []byte) (int, error) {
 	return 0, r.Err
 }
 
 func TestParseIdErr(t *testing.T) {
-	p := NewParser(&errReader{io.ErrClosedPipe}, Anomalous)
+	p := NewParser(&errReaderWriter{io.ErrClosedPipe}, Play, ClientBound)
 
-	if _, err := p.Next(); err != io.ErrClosedPipe {
+	if _, err := p.Recv(); err != io.ErrClosedPipe {
 		t.Fatalf("expected io.ErrClosedPipe, got %#v", err)
 	}
 }
 
 // This will always return one less byte than they want.
-type lessReader struct{}
+type lessReaderWriter struct{}
 
-func (r *lessReader) Read(b []byte) (int, error) {
+func (r *lessReaderWriter) Read(b []byte) (int, error) {
 	return len(b) - 1, nil
 }
 
-func TestParseIdLessBytes(t *testing.T) {
-	p := NewParser(&lessReader{}, Anomalous)
+func (r *lessReaderWriter) Write(p []byte) (int, error) {
+	return len(p) - 1, nil
+}
 
-	_, err := p.Next()
-	expected := "kyubu: Read failed for id, wanted 1 bytes, got 0"
-	if err.Error() != expected {
-		t.Fatalf("expected %q, got %q", expected, err.Error())
+func TestParseIdLessBytes(t *testing.T) {
+	p := NewParser(&lessReaderWriter{}, Play, ClientBound)
+
+	_, err := p.Recv()
+	if err != io.EOF {
+		t.Fatalf("expected io.EOF, got %s", err)
 	}
 }
