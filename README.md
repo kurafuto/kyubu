@@ -6,12 +6,11 @@ decompression.
 
 Currently, Kyubu is separated into a few logical parts:
 
+* `kyubu/cmd` - Where `protocol_generator` et al live
+* `kyubu/format` - the Chat format, lifted from [thinkofdeath/steven](https://github.com/thinkofdeath/steven)
+* `kyubu/modern/minimal` - Minimal modern (1.8.3/47) packet definitions
+	Enough for [Kurafuto](https://github.com/kurafuto/kurafuto) to function, but not everything
 * `kyubu/packets` - packet parser/serializer stuff
-	* ~~`kyubu/modern` - Modern (1.8.3/47) packets~~ - not implemented yet.
-	* `kyubu/modern/minimal` - Minimal modern (1.8.3/47) packet definitions.
-		Enough for [Kurafuto](https://github.com/kurafuto/kurafuto) to function, but not everything.
-* `kyubu/chunk` - chunk/block related stuff
-* `kyubu/test` - test packet definitions for protocol_generator
 
 ## Extending Kyubu
 
@@ -19,7 +18,7 @@ Should you wish to actually _use_ Kyubu (and I can't blame you, who wouldn't!),
 you can extend the functionality of the parser easily by simply registering
 additional packets with the parser (`kyubu/packets.Register`).
 
-For a working example, see `kyubu/test/test_proto.go`.
+For a working example, see `kyubu/cmd/protocol_generatortest/test_proto.go`.
 
 The general idea is this:
 
@@ -35,18 +34,10 @@ The general idea is this:
 
 To save on time, rather than the old method of reflection, Kyubu now ships with
 a custom `go generate`-compatible command that makes your packet parser/serializer
-cruft for you. Look at `test/test.go` for an example.
+cruft for you. Look at `cmd/protocol_generator/test/test.go` for an example.
 
 NOTE: It's heavily based off of the protocol_generator from
 [thinkofdeath/steven](https://github.com/thinkofdeath/steven).
-
-## Roadmap
-
-* [ ] Make sure the chunk decompression still works with modern Minecraft.
-* [ ] Actually get around to implementing all the types/packets in `kyubu/modern`.
-* [ ] Add tests that work for `protocol_generator` and the packet stuff.
-* [ ] Documentation and better examples.
-* [ ] Update from 1.8.3/47 to 15w32a/52. (http://wiki.vg/Protocol_History)
 
 ## Tests
 

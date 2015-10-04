@@ -24,4 +24,4 @@ _testmain.go
 
 .*.swp
 *~
-protocol_generator
+cmd/protocol_generator/protocol_generator
