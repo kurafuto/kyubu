@@ -63,13 +63,19 @@ type Angle uint8
 type UUID [16]byte
 
 func ReadBool(r io.Reader) (bool, error) {
-	// TODO
-	return false, nil
+	var b [1]byte
+	if _, err := r.Read(b[:1]); err != nil {
+		return false, err
+	}
+	return b[0] == 0x01, nil
 }
 
 func WriteBool(w io.Writer, b bool) error {
-	// TODO
-	return nil
+	var bb byte = 0
+	if b {
+		bb = 0x01
+	}
+	return binary.Write(w, Endianness, bb)
 }
 
 func ReadString(r io.Reader) (string, error) {
