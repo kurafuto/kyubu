@@ -5,7 +5,6 @@ package modern
 
 import (
 	"encoding/binary"
-	"errors"
 	"github.com/kurafuto/kyubu/packets"
 	"io"
 	"io/ioutil"
@@ -23,33 +22,16 @@ func (t *ClientMessage) Id() byte {
 }
 
 func (t *ClientMessage) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Message)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Message); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	return
 }
 
 func (t *ClientMessage) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Message, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Message = string(tmp1)
-
 	return
 }
 
@@ -58,21 +40,14 @@ func (t *ClientTabComplete) Id() byte {
 }
 
 func (t *ClientTabComplete) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Text)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Text); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
-	tmp3 := byte(0)
+	tmp0 := byte(0)
 	if t.HasPosition {
-		tmp3 = byte(1)
+		tmp0 = byte(1)
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp3); err != nil {
+	if err = binary.Write(ww, binary.BigEndian, tmp0); err != nil {
 		return err
 	}
 
@@ -86,24 +61,14 @@ func (t *ClientTabComplete) Encode(ww io.Writer) (err error) {
 }
 
 func (t *ClientTabComplete) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Text, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Text = string(tmp1)
-
-	var tmp3 [1]byte
-	if _, err = rr.Read(tmp3[:1]); err != nil {
+	var tmp0 [1]byte
+	if _, err = rr.Read(tmp0[:1]); err != nil {
 		return err
 	}
-	t.HasPosition = tmp3[0] == 0x01
+	t.HasPosition = tmp0[0] == 0x01
 
 	if t.HasPosition {
 		if err = binary.Read(rr, binary.BigEndian, t.LookedAtBlock); err != nil {
@@ -143,16 +108,9 @@ func (t *ClientPluginMessage) Id() byte {
 }
 
 func (t *ClientPluginMessage) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Channel)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Channel); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	if _, err = ww.Write(t.Data); err != nil {
 		return err
 	}
@@ -160,19 +118,9 @@ func (t *ClientPluginMessage) Encode(ww io.Writer) (err error) {
 }
 
 func (t *ClientPluginMessage) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Channel, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Channel = string(tmp1)
-
 	if t.Data, err = ioutil.ReadAll(rr); err != nil {
 		return
 	}

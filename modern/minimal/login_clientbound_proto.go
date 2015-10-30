@@ -6,7 +6,6 @@ package modern
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/kurafuto/kyubu/packets"
 	"io"
@@ -50,28 +49,21 @@ func (t *EncryptionRequest) Id() byte {
 }
 
 func (t *EncryptionRequest) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.ServerID)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.ServerID); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
-	tmp3 := make([]byte, binary.MaxVarintLen64)
-	tmp4 := packets.PutVarint(tmp3, int64(len(t.PublicKey)))
-	if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp4]); err != nil {
+	tmp0 := make([]byte, binary.MaxVarintLen64)
+	tmp1 := packets.PutVarint(tmp0, int64(len(t.PublicKey)))
+	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp1]); err != nil {
 		return err
 	}
 
 	if _, err = ww.Write(t.PublicKey); err != nil {
 		return err
 	}
-	tmp5 := make([]byte, binary.MaxVarintLen64)
-	tmp6 := packets.PutVarint(tmp5, int64(len(t.VerifyToken)))
-	if err = binary.Write(ww, binary.BigEndian, tmp5[:tmp6]); err != nil {
+	tmp2 := make([]byte, binary.MaxVarintLen64)
+	tmp3 := packets.PutVarint(tmp2, int64(len(t.VerifyToken)))
+	if err = binary.Write(ww, binary.BigEndian, tmp2[:tmp3]); err != nil {
 		return err
 	}
 
@@ -82,44 +74,34 @@ func (t *EncryptionRequest) Encode(ww io.Writer) (err error) {
 }
 
 func (t *EncryptionRequest) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
+	if t.ServerID, err = packets.ReadString(rr); err != nil {
+		return err
+	}
+	var tmp0 packets.VarInt
+	tmp1, err := packets.ReadVarint(rr)
 	if err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.ServerID = string(tmp1)
+	tmp0 = packets.VarInt(tmp1)
 
-	var tmp3 packets.VarInt
-	tmp4, err := packets.ReadVarint(rr)
-	if err != nil {
-		return err
+	if tmp0 < 0 {
+		return fmt.Errorf("negative array size: %d < 0", tmp0)
 	}
-	tmp3 = packets.VarInt(tmp4)
-
-	if tmp3 < 0 {
-		return fmt.Errorf("negative array size: %d < 0", tmp3)
-	}
-	t.PublicKey = make([]byte, tmp3)
+	t.PublicKey = make([]byte, tmp0)
 	if _, err = rr.Read(t.PublicKey); err != nil {
 		return err
 	}
-	var tmp5 packets.VarInt
-	tmp6, err := packets.ReadVarint(rr)
+	var tmp2 packets.VarInt
+	tmp3, err := packets.ReadVarint(rr)
 	if err != nil {
 		return err
 	}
-	tmp5 = packets.VarInt(tmp6)
+	tmp2 = packets.VarInt(tmp3)
 
-	if tmp5 < 0 {
-		return fmt.Errorf("negative array size: %d < 0", tmp5)
+	if tmp2 < 0 {
+		return fmt.Errorf("negative array size: %d < 0", tmp2)
 	}
-	t.VerifyToken = make([]byte, tmp5)
+	t.VerifyToken = make([]byte, tmp2)
 	if _, err = rr.Read(t.VerifyToken); err != nil {
 		return err
 	}
@@ -131,56 +113,22 @@ func (t *LoginSuccess) Id() byte {
 }
 
 func (t *LoginSuccess) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.UUID)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.UUID); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
+	if err = packets.WriteString(ww, t.Username); err != nil {
 		return err
 	}
-
-	tmp3 := make([]byte, binary.MaxVarintLen32)
-	tmp4 := []byte(t.Username)
-	tmp5 := packets.PutVarint(tmp3, int64(len(tmp4)))
-	if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp5]); err != nil {
-		return err
-	}
-	if err = binary.Write(ww, binary.BigEndian, tmp4); err != nil {
-		return err
-	}
-
 	return
 }
 
 func (t *LoginSuccess) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.UUID, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.UUID = string(tmp1)
-
-	tmp3, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Username, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp4 := make([]byte, tmp3)
-	tmp5, err := rr.Read(tmp4)
-	if err != nil {
-		return err
-	} else if int64(tmp5) != tmp3 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Username = string(tmp4)
-
 	return
 }
 

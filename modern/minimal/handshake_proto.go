@@ -5,7 +5,6 @@ package modern
 
 import (
 	"encoding/binary"
-	"errors"
 	"github.com/kurafuto/kyubu/packets"
 	"io"
 )
@@ -25,23 +24,16 @@ func (t *Handshake) Encode(ww io.Writer) (err error) {
 		return err
 	}
 
-	tmp2 := make([]byte, binary.MaxVarintLen32)
-	tmp3 := []byte(t.Address)
-	tmp4 := packets.PutVarint(tmp2, int64(len(tmp3)))
-	if err = binary.Write(ww, binary.BigEndian, tmp2[:tmp4]); err != nil {
+	if err = packets.WriteString(ww, t.Address); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp3); err != nil {
-		return err
-	}
-
 	if err = binary.Write(ww, binary.BigEndian, t.Port); err != nil {
 		return err
 	}
 
-	tmp5 := make([]byte, binary.MaxVarintLen64)
-	tmp6 := packets.PutVarint(tmp5, int64(t.NextState))
-	if err = binary.Write(ww, binary.BigEndian, tmp5[:tmp6]); err != nil {
+	tmp2 := make([]byte, binary.MaxVarintLen64)
+	tmp3 := packets.PutVarint(tmp2, int64(t.NextState))
+	if err = binary.Write(ww, binary.BigEndian, tmp2[:tmp3]); err != nil {
 		return err
 	}
 
@@ -55,28 +47,18 @@ func (t *Handshake) Decode(rr io.Reader) (err error) {
 	}
 	t.ProtocolVersion = packets.VarInt(tmp0)
 
-	tmp1, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Address, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp2 := make([]byte, tmp1)
-	tmp3, err := rr.Read(tmp2)
-	if err != nil {
-		return err
-	} else if int64(tmp3) != tmp1 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Address = string(tmp2)
-
 	if err = binary.Read(rr, binary.BigEndian, t.Port); err != nil {
 		return err
 	}
 
-	tmp4, err := packets.ReadVarint(rr)
+	tmp1, err := packets.ReadVarint(rr)
 	if err != nil {
 		return err
 	}
-	t.NextState = packets.VarInt(tmp4)
+	t.NextState = packets.VarInt(tmp1)
 
 	return
 }

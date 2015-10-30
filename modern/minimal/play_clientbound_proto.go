@@ -6,7 +6,6 @@ package modern
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/kurafuto/kyubu/packets"
 	"io"
@@ -53,21 +52,14 @@ func (t *JoinGame) Encode(ww io.Writer) (err error) {
 		return err
 	}
 
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.LevelType)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.LevelType); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
-	tmp3 := byte(0)
+	tmp0 := byte(0)
 	if t.ReducedDebug {
-		tmp3 = byte(1)
+		tmp0 = byte(1)
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp3); err != nil {
+	if err = binary.Write(ww, binary.BigEndian, tmp0); err != nil {
 		return err
 	}
 
@@ -95,24 +87,14 @@ func (t *JoinGame) Decode(rr io.Reader) (err error) {
 		return err
 	}
 
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.LevelType, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.LevelType = string(tmp1)
-
-	var tmp3 [1]byte
-	if _, err = rr.Read(tmp3[:1]); err != nil {
+	var tmp0 [1]byte
+	if _, err = rr.Read(tmp0[:1]); err != nil {
 		return err
 	}
-	t.ReducedDebug = tmp3[0] == 0x01
+	t.ReducedDebug = tmp0[0] == 0x01
 
 	return
 }
@@ -168,16 +150,9 @@ func (t *Respawn) Encode(ww io.Writer) (err error) {
 		return err
 	}
 
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.LevelType)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.LevelType); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	return
 }
 
@@ -194,19 +169,9 @@ func (t *Respawn) Decode(rr io.Reader) (err error) {
 		return err
 	}
 
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.LevelType, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.LevelType = string(tmp1)
-
 	return
 }
 
@@ -238,90 +203,62 @@ func (t *PlayerListItem) Encode(ww io.Writer) (err error) {
 			return err
 		}
 
-		tmp7 := make([]byte, binary.MaxVarintLen32)
-		tmp8 := []byte(t.Players[tmp6].Name)
-		tmp9 := packets.PutVarint(tmp7, int64(len(tmp8)))
-		if err = binary.Write(ww, binary.BigEndian, tmp7[:tmp9]); err != nil {
+		if err = packets.WriteString(ww, t.Players[tmp6].Name); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp8); err != nil {
-			return err
-		}
-
-		tmp10 := make([]byte, binary.MaxVarintLen64)
-		tmp11 := packets.PutVarint(tmp10, int64(len(t.Players[tmp6].Properties)))
-		if err = binary.Write(ww, binary.BigEndian, tmp10[:tmp11]); err != nil {
+		tmp7 := make([]byte, binary.MaxVarintLen64)
+		tmp8 := packets.PutVarint(tmp7, int64(len(t.Players[tmp6].Properties)))
+		if err = binary.Write(ww, binary.BigEndian, tmp7[:tmp8]); err != nil {
 			return err
 		}
 
-		for tmp12 := range t.Players[tmp6].Properties {
-			tmp13 := make([]byte, binary.MaxVarintLen32)
-			tmp14 := []byte(t.Players[tmp6].Properties[tmp12].Name)
-			tmp15 := packets.PutVarint(tmp13, int64(len(tmp14)))
-			if err = binary.Write(ww, binary.BigEndian, tmp13[:tmp15]); err != nil {
+		for tmp9 := range t.Players[tmp6].Properties {
+			if err = packets.WriteString(ww, t.Players[tmp6].Properties[tmp9].Name); err != nil {
 				return err
 			}
-			if err = binary.Write(ww, binary.BigEndian, tmp14); err != nil {
+			if err = packets.WriteString(ww, t.Players[tmp6].Properties[tmp9].Value); err != nil {
 				return err
 			}
-
-			tmp16 := make([]byte, binary.MaxVarintLen32)
-			tmp17 := []byte(t.Players[tmp6].Properties[tmp12].Value)
-			tmp18 := packets.PutVarint(tmp16, int64(len(tmp17)))
-			if err = binary.Write(ww, binary.BigEndian, tmp16[:tmp18]); err != nil {
-				return err
+			tmp10 := byte(0)
+			if t.Players[tmp6].Properties[tmp9].Signed {
+				tmp10 = byte(1)
 			}
-			if err = binary.Write(ww, binary.BigEndian, tmp17); err != nil {
+			if err = binary.Write(ww, binary.BigEndian, tmp10); err != nil {
 				return err
 			}
 
-			tmp19 := byte(0)
-			if t.Players[tmp6].Properties[tmp12].Signed {
-				tmp19 = byte(1)
-			}
-			if err = binary.Write(ww, binary.BigEndian, tmp19); err != nil {
-				return err
-			}
-
-			if t.Players[tmp6].Properties[tmp12].Signed {
-				tmp20 := make([]byte, binary.MaxVarintLen32)
-				tmp21 := []byte(t.Players[tmp6].Properties[tmp12].Signature)
-				tmp22 := packets.PutVarint(tmp20, int64(len(tmp21)))
-				if err = binary.Write(ww, binary.BigEndian, tmp20[:tmp22]); err != nil {
+			if t.Players[tmp6].Properties[tmp9].Signed {
+				if err = packets.WriteString(ww, t.Players[tmp6].Properties[tmp9].Signature); err != nil {
 					return err
 				}
-				if err = binary.Write(ww, binary.BigEndian, tmp21); err != nil {
-					return err
-				}
-
 			}
 		}
-		tmp23 := make([]byte, binary.MaxVarintLen64)
-		tmp24 := packets.PutVarint(tmp23, int64(t.Players[tmp6].Gamemode))
-		if err = binary.Write(ww, binary.BigEndian, tmp23[:tmp24]); err != nil {
+		tmp11 := make([]byte, binary.MaxVarintLen64)
+		tmp12 := packets.PutVarint(tmp11, int64(t.Players[tmp6].Gamemode))
+		if err = binary.Write(ww, binary.BigEndian, tmp11[:tmp12]); err != nil {
 			return err
 		}
 
-		tmp25 := make([]byte, binary.MaxVarintLen64)
-		tmp26 := packets.PutVarint(tmp25, int64(t.Players[tmp6].Ping))
-		if err = binary.Write(ww, binary.BigEndian, tmp25[:tmp26]); err != nil {
+		tmp13 := make([]byte, binary.MaxVarintLen64)
+		tmp14 := packets.PutVarint(tmp13, int64(t.Players[tmp6].Ping))
+		if err = binary.Write(ww, binary.BigEndian, tmp13[:tmp14]); err != nil {
 			return err
 		}
 
-		tmp27 := byte(0)
+		tmp15 := byte(0)
 		if t.Players[tmp6].HasDisplayName {
-			tmp27 = byte(1)
+			tmp15 = byte(1)
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp27); err != nil {
+		if err = binary.Write(ww, binary.BigEndian, tmp15); err != nil {
 			return err
 		}
 
 		if t.Players[tmp6].HasDisplayName {
-			var tmp28 []byte
-			if tmp28, err = json.Marshal(&t.Players[tmp6].DisplayName); err != nil {
+			var tmp16 []byte
+			if tmp16, err = json.Marshal(&t.Players[tmp6].DisplayName); err != nil {
 				return err
 			}
-			if err = packets.WriteString(ww, string(tmp28)); err != nil {
+			if err = packets.WriteString(ww, string(tmp16)); err != nil {
 				return err
 			}
 		}
@@ -358,103 +295,63 @@ func (t *PlayerListItem) Decode(rr io.Reader) (err error) {
 			return err
 		}
 
-		tmp5, err := packets.ReadVarint(rr)
+		if t.Players[tmp4].Name, err = packets.ReadString(rr); err != nil {
+			return err
+		}
+		var tmp5 packets.VarInt
+		tmp6, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		tmp6 := make([]byte, tmp5)
-		tmp7, err := rr.Read(tmp6)
-		if err != nil {
-			return err
-		} else if int64(tmp7) != tmp5 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Players[tmp4].Name = string(tmp6)
+		tmp5 = packets.VarInt(tmp6)
 
-		var tmp8 packets.VarInt
+		if tmp5 < 0 {
+			return fmt.Errorf("negative array size: %d < 0", tmp5)
+		}
+		t.Players[tmp4].Properties = make([]Property, tmp5)
+		for tmp7 := range t.Players[tmp4].Properties {
+			if t.Players[tmp4].Properties[tmp7].Name, err = packets.ReadString(rr); err != nil {
+				return err
+			}
+			if t.Players[tmp4].Properties[tmp7].Value, err = packets.ReadString(rr); err != nil {
+				return err
+			}
+			var tmp8 [1]byte
+			if _, err = rr.Read(tmp8[:1]); err != nil {
+				return err
+			}
+			t.Players[tmp4].Properties[tmp7].Signed = tmp8[0] == 0x01
+
+			if t.Players[tmp4].Properties[tmp7].Signed {
+				if t.Players[tmp4].Properties[tmp7].Signature, err = packets.ReadString(rr); err != nil {
+					return err
+				}
+			}
+		}
 		tmp9, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		tmp8 = packets.VarInt(tmp9)
+		t.Players[tmp4].Gamemode = packets.VarInt(tmp9)
 
-		if tmp8 < 0 {
-			return fmt.Errorf("negative array size: %d < 0", tmp8)
-		}
-		t.Players[tmp4].Properties = make([]Property, tmp8)
-		for tmp10 := range t.Players[tmp4].Properties {
-			tmp11, err := packets.ReadVarint(rr)
-			if err != nil {
-				return err
-			}
-			tmp12 := make([]byte, tmp11)
-			tmp13, err := rr.Read(tmp12)
-			if err != nil {
-				return err
-			} else if int64(tmp13) != tmp11 {
-				return errors.New("didn't read enough bytes for string")
-			}
-			t.Players[tmp4].Properties[tmp10].Name = string(tmp12)
-
-			tmp14, err := packets.ReadVarint(rr)
-			if err != nil {
-				return err
-			}
-			tmp15 := make([]byte, tmp14)
-			tmp16, err := rr.Read(tmp15)
-			if err != nil {
-				return err
-			} else if int64(tmp16) != tmp14 {
-				return errors.New("didn't read enough bytes for string")
-			}
-			t.Players[tmp4].Properties[tmp10].Value = string(tmp15)
-
-			var tmp17 [1]byte
-			if _, err = rr.Read(tmp17[:1]); err != nil {
-				return err
-			}
-			t.Players[tmp4].Properties[tmp10].Signed = tmp17[0] == 0x01
-
-			if t.Players[tmp4].Properties[tmp10].Signed {
-				tmp18, err := packets.ReadVarint(rr)
-				if err != nil {
-					return err
-				}
-				tmp19 := make([]byte, tmp18)
-				tmp20, err := rr.Read(tmp19)
-				if err != nil {
-					return err
-				} else if int64(tmp20) != tmp18 {
-					return errors.New("didn't read enough bytes for string")
-				}
-				t.Players[tmp4].Properties[tmp10].Signature = string(tmp19)
-
-			}
-		}
-		tmp21, err := packets.ReadVarint(rr)
+		tmp10, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		t.Players[tmp4].Gamemode = packets.VarInt(tmp21)
+		t.Players[tmp4].Ping = packets.VarInt(tmp10)
 
-		tmp22, err := packets.ReadVarint(rr)
-		if err != nil {
+		var tmp11 [1]byte
+		if _, err = rr.Read(tmp11[:1]); err != nil {
 			return err
 		}
-		t.Players[tmp4].Ping = packets.VarInt(tmp22)
-
-		var tmp23 [1]byte
-		if _, err = rr.Read(tmp23[:1]); err != nil {
-			return err
-		}
-		t.Players[tmp4].HasDisplayName = tmp23[0] == 0x01
+		t.Players[tmp4].HasDisplayName = tmp11[0] == 0x01
 
 		if t.Players[tmp4].HasDisplayName {
-			var tmp24 string
-			if tmp24, err = packets.ReadString(rr); err != nil {
+			var tmp12 string
+			if tmp12, err = packets.ReadString(rr); err != nil {
 				return err
 			}
-			if err = json.Unmarshal([]byte(tmp24), &t.Players[tmp4].DisplayName); err != nil {
+			if err = json.Unmarshal([]byte(tmp12), &t.Players[tmp4].DisplayName); err != nil {
 				return err
 			}
 		}
@@ -474,16 +371,9 @@ func (t *ServerTabComplete) Encode(ww io.Writer) (err error) {
 	}
 
 	for tmp2 := range t.Matches {
-		tmp3 := make([]byte, binary.MaxVarintLen32)
-		tmp4 := []byte(t.Matches[tmp2])
-		tmp5 := packets.PutVarint(tmp3, int64(len(tmp4)))
-		if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp5]); err != nil {
+		if err = packets.WriteString(ww, t.Matches[tmp2]); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp4); err != nil {
-			return err
-		}
-
 	}
 	return
 }
@@ -501,19 +391,9 @@ func (t *ServerTabComplete) Decode(rr io.Reader) (err error) {
 	}
 	t.Matches = make([]string, tmp0)
 	for tmp2 := range t.Matches {
-		tmp3, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Matches[tmp2], err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp4 := make([]byte, tmp3)
-		tmp5, err := rr.Read(tmp4)
-		if err != nil {
-			return err
-		} else if int64(tmp5) != tmp3 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Matches[tmp2] = string(tmp4)
-
 	}
 	return
 }
@@ -523,94 +403,43 @@ func (t *ScoreboardObjective) Id() byte {
 }
 
 func (t *ScoreboardObjective) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Name)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Name); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	if err = binary.Write(ww, binary.BigEndian, t.Mode); err != nil {
 		return err
 	}
 
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp3 := make([]byte, binary.MaxVarintLen32)
-		tmp4 := []byte(t.Value)
-		tmp5 := packets.PutVarint(tmp3, int64(len(tmp4)))
-		if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp5]); err != nil {
+		if err = packets.WriteString(ww, t.Value); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp4); err != nil {
-			return err
-		}
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp6 := make([]byte, binary.MaxVarintLen32)
-		tmp7 := []byte(t.Type)
-		tmp8 := packets.PutVarint(tmp6, int64(len(tmp7)))
-		if err = binary.Write(ww, binary.BigEndian, tmp6[:tmp8]); err != nil {
+		if err = packets.WriteString(ww, t.Type); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp7); err != nil {
-			return err
-		}
-
 	}
 	return
 }
 
 func (t *ScoreboardObjective) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Name, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Name = string(tmp1)
-
 	if err = binary.Read(rr, binary.BigEndian, t.Mode); err != nil {
 		return err
 	}
 
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp3, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Value, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp4 := make([]byte, tmp3)
-		tmp5, err := rr.Read(tmp4)
-		if err != nil {
-			return err
-		} else if int64(tmp5) != tmp3 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Value = string(tmp4)
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp6, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Type, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp7 := make([]byte, tmp6)
-		tmp8, err := rr.Read(tmp7)
-		if err != nil {
-			return err
-		} else if int64(tmp8) != tmp6 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Type = string(tmp7)
-
 	}
 	return
 }
@@ -620,34 +449,20 @@ func (t *UpdateScore) Id() byte {
 }
 
 func (t *UpdateScore) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Name)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Name); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	if err = binary.Write(ww, binary.BigEndian, t.Action); err != nil {
 		return err
 	}
 
-	tmp3 := make([]byte, binary.MaxVarintLen32)
-	tmp4 := []byte(t.ObjectiveName)
-	tmp5 := packets.PutVarint(tmp3, int64(len(tmp4)))
-	if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp5]); err != nil {
+	if err = packets.WriteString(ww, t.ObjectiveName); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp4); err != nil {
-		return err
-	}
-
 	if t.Action != 1 {
-		tmp6 := make([]byte, binary.MaxVarintLen64)
-		tmp7 := packets.PutVarint(tmp6, int64(t.Value))
-		if err = binary.Write(ww, binary.BigEndian, tmp6[:tmp7]); err != nil {
+		tmp0 := make([]byte, binary.MaxVarintLen64)
+		tmp1 := packets.PutVarint(tmp0, int64(t.Value))
+		if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp1]); err != nil {
 			return err
 		}
 
@@ -656,42 +471,22 @@ func (t *UpdateScore) Encode(ww io.Writer) (err error) {
 }
 
 func (t *UpdateScore) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Name, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Name = string(tmp1)
-
 	if err = binary.Read(rr, binary.BigEndian, t.Action); err != nil {
 		return err
 	}
 
-	tmp3, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.ObjectiveName, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp4 := make([]byte, tmp3)
-	tmp5, err := rr.Read(tmp4)
-	if err != nil {
-		return err
-	} else if int64(tmp5) != tmp3 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.ObjectiveName = string(tmp4)
-
 	if t.Action != 1 {
-		tmp6, err := packets.ReadVarint(rr)
+		tmp0, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		t.Value = packets.VarInt(tmp6)
+		t.Value = packets.VarInt(tmp0)
 
 	}
 	return
@@ -706,16 +501,9 @@ func (t *ShowScoreboard) Encode(ww io.Writer) (err error) {
 		return err
 	}
 
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Name)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Name); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	return
 }
 
@@ -724,19 +512,9 @@ func (t *ShowScoreboard) Decode(rr io.Reader) (err error) {
 		return err
 	}
 
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Name, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Name = string(tmp1)
-
 	return
 }
 
@@ -745,55 +523,27 @@ func (t *Teams) Id() byte {
 }
 
 func (t *Teams) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Name)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Name); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	if err = binary.Write(ww, binary.BigEndian, t.Mode); err != nil {
 		return err
 	}
 
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp3 := make([]byte, binary.MaxVarintLen32)
-		tmp4 := []byte(t.Display)
-		tmp5 := packets.PutVarint(tmp3, int64(len(tmp4)))
-		if err = binary.Write(ww, binary.BigEndian, tmp3[:tmp5]); err != nil {
+		if err = packets.WriteString(ww, t.Display); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp4); err != nil {
-			return err
-		}
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp6 := make([]byte, binary.MaxVarintLen32)
-		tmp7 := []byte(t.Prefix)
-		tmp8 := packets.PutVarint(tmp6, int64(len(tmp7)))
-		if err = binary.Write(ww, binary.BigEndian, tmp6[:tmp8]); err != nil {
+		if err = packets.WriteString(ww, t.Prefix); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp7); err != nil {
-			return err
-		}
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp9 := make([]byte, binary.MaxVarintLen32)
-		tmp10 := []byte(t.Suffix)
-		tmp11 := packets.PutVarint(tmp9, int64(len(tmp10)))
-		if err = binary.Write(ww, binary.BigEndian, tmp9[:tmp11]); err != nil {
+		if err = packets.WriteString(ww, t.Suffix); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp10); err != nil {
-			return err
-		}
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
 		if err = binary.Write(ww, binary.BigEndian, t.FriendlyFire); err != nil {
@@ -802,16 +552,9 @@ func (t *Teams) Encode(ww io.Writer) (err error) {
 
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp12 := make([]byte, binary.MaxVarintLen32)
-		tmp13 := []byte(t.NameTagVisibility)
-		tmp14 := packets.PutVarint(tmp12, int64(len(tmp13)))
-		if err = binary.Write(ww, binary.BigEndian, tmp12[:tmp14]); err != nil {
+		if err = packets.WriteString(ww, t.NameTagVisibility); err != nil {
 			return err
 		}
-		if err = binary.Write(ww, binary.BigEndian, tmp13); err != nil {
-			return err
-		}
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
 		if err = binary.Write(ww, binary.BigEndian, t.Color); err != nil {
@@ -820,90 +563,43 @@ func (t *Teams) Encode(ww io.Writer) (err error) {
 
 	}
 	if t.Mode == 0 || t.Mode == 3 || t.Mode == 4 {
-		tmp15 := make([]byte, binary.MaxVarintLen64)
-		tmp16 := packets.PutVarint(tmp15, int64(len(t.Players)))
-		if err = binary.Write(ww, binary.BigEndian, tmp15[:tmp16]); err != nil {
+		tmp0 := make([]byte, binary.MaxVarintLen64)
+		tmp1 := packets.PutVarint(tmp0, int64(len(t.Players)))
+		if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp1]); err != nil {
 			return err
 		}
 
-		for tmp17 := range t.Players {
-			tmp18 := make([]byte, binary.MaxVarintLen32)
-			tmp19 := []byte(t.Players[tmp17])
-			tmp20 := packets.PutVarint(tmp18, int64(len(tmp19)))
-			if err = binary.Write(ww, binary.BigEndian, tmp18[:tmp20]); err != nil {
+		for tmp2 := range t.Players {
+			if err = packets.WriteString(ww, t.Players[tmp2]); err != nil {
 				return err
 			}
-			if err = binary.Write(ww, binary.BigEndian, tmp19); err != nil {
-				return err
-			}
-
 		}
 	}
 	return
 }
 
 func (t *Teams) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Name, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Name = string(tmp1)
-
 	if err = binary.Read(rr, binary.BigEndian, t.Mode); err != nil {
 		return err
 	}
 
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp3, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Display, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp4 := make([]byte, tmp3)
-		tmp5, err := rr.Read(tmp4)
-		if err != nil {
-			return err
-		} else if int64(tmp5) != tmp3 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Display = string(tmp4)
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp6, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Prefix, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp7 := make([]byte, tmp6)
-		tmp8, err := rr.Read(tmp7)
-		if err != nil {
-			return err
-		} else if int64(tmp8) != tmp6 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Prefix = string(tmp7)
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp9, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Suffix, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp10 := make([]byte, tmp9)
-		tmp11, err := rr.Read(tmp10)
-		if err != nil {
-			return err
-		} else if int64(tmp11) != tmp9 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.Suffix = string(tmp10)
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
 		if err = binary.Read(rr, binary.BigEndian, t.FriendlyFire); err != nil {
@@ -912,19 +608,9 @@ func (t *Teams) Decode(rr io.Reader) (err error) {
 
 	}
 	if t.Mode == 0 || t.Mode == 2 {
-		tmp12, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.NameTagVisibility, err = packets.ReadString(rr); err != nil {
 			return err
 		}
-		tmp13 := make([]byte, tmp12)
-		tmp14, err := rr.Read(tmp13)
-		if err != nil {
-			return err
-		} else if int64(tmp14) != tmp12 {
-			return errors.New("didn't read enough bytes for string")
-		}
-		t.NameTagVisibility = string(tmp13)
-
 	}
 	if t.Mode == 0 || t.Mode == 2 {
 		if err = binary.Read(rr, binary.BigEndian, t.Color); err != nil {
@@ -933,31 +619,21 @@ func (t *Teams) Decode(rr io.Reader) (err error) {
 
 	}
 	if t.Mode == 0 || t.Mode == 3 || t.Mode == 4 {
-		var tmp15 packets.VarInt
-		tmp16, err := packets.ReadVarint(rr)
+		var tmp0 packets.VarInt
+		tmp1, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		tmp15 = packets.VarInt(tmp16)
+		tmp0 = packets.VarInt(tmp1)
 
-		if tmp15 < 0 {
-			return fmt.Errorf("negative array size: %d < 0", tmp15)
+		if tmp0 < 0 {
+			return fmt.Errorf("negative array size: %d < 0", tmp0)
 		}
-		t.Players = make([]string, tmp15)
-		for tmp17 := range t.Players {
-			tmp18, err := packets.ReadVarint(rr)
-			if err != nil {
+		t.Players = make([]string, tmp0)
+		for tmp2 := range t.Players {
+			if t.Players[tmp2], err = packets.ReadString(rr); err != nil {
 				return err
 			}
-			tmp19 := make([]byte, tmp18)
-			tmp20, err := rr.Read(tmp19)
-			if err != nil {
-				return err
-			} else if int64(tmp20) != tmp18 {
-				return errors.New("didn't read enough bytes for string")
-			}
-			t.Players[tmp17] = string(tmp19)
-
 		}
 	}
 	return
@@ -968,16 +644,9 @@ func (t *ServerPluginMessage) Id() byte {
 }
 
 func (t *ServerPluginMessage) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Channel)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Channel); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	if _, err = ww.Write(t.Data); err != nil {
 		return err
 	}
@@ -985,19 +654,9 @@ func (t *ServerPluginMessage) Encode(ww io.Writer) (err error) {
 }
 
 func (t *ServerPluginMessage) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Channel, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Channel = string(tmp1)
-
 	if t.Data, err = ioutil.ReadAll(rr); err != nil {
 		return
 	}
