@@ -39,12 +39,14 @@ type PlayerListItem struct {
 
 type Player struct {
 	UUID           packets.UUID
-	Name           string     `if:"t.Action == 0" noreplace:"true"`
-	Properties     []Property `length:"packets.VarInt"`
-	Gamemode       packets.VarInt
-	Ping           packets.VarInt
-	HasDisplayName bool
-	DisplayName    packets.Chat `as:"json" if:".HasDisplayName"`
+	Name           string         `if:".Action == 0" noreplace:"true"`
+	Properties     []Property     `if:".Action == 0" length:"packets.VarInt" noreplace:"true"`
+	Gamemode       packets.VarInt `if:".Action == 0 || .Action == 1" noreplace:"true"`
+	Ping           packets.VarInt `if:".Action == 0 || .Action == 2" noreplace:"true"`
+	HasDisplayName bool           `if:".Action == 0 || .Action == 3" noreplace:"true"`
+	DisplayName    packets.Chat   `as:"json" if:".HasDisplayName"`
+
+	// FYI, the `noreplace:"true"` lets us refer to PlayerListItem.
 
 	// Action == 0 (add player)
 	//  Name, Properties, Gamemode, Ping, HasDisplayName, DisplayName

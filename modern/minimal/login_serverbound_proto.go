@@ -5,7 +5,6 @@ package modern
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"github.com/kurafuto/kyubu/packets"
 	"io"
@@ -21,33 +20,16 @@ func (t *LoginStart) Id() byte {
 }
 
 func (t *LoginStart) Encode(ww io.Writer) (err error) {
-	tmp0 := make([]byte, binary.MaxVarintLen32)
-	tmp1 := []byte(t.Username)
-	tmp2 := packets.PutVarint(tmp0, int64(len(tmp1)))
-	if err = binary.Write(ww, binary.BigEndian, tmp0[:tmp2]); err != nil {
+	if err = packets.WriteString(ww, t.Username); err != nil {
 		return err
 	}
-	if err = binary.Write(ww, binary.BigEndian, tmp1); err != nil {
-		return err
-	}
-
 	return
 }
 
 func (t *LoginStart) Decode(rr io.Reader) (err error) {
-	tmp0, err := packets.ReadVarint(rr)
-	if err != nil {
+	if t.Username, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	tmp1 := make([]byte, tmp0)
-	tmp2, err := rr.Read(tmp1)
-	if err != nil {
-		return err
-	} else if int64(tmp2) != tmp0 {
-		return errors.New("didn't read enough bytes for string")
-	}
-	t.Username = string(tmp1)
-
 	return
 }
 

@@ -62,6 +62,16 @@ type Angle uint8
 
 type UUID [16]byte
 
+func ReadBool(r io.Reader) (bool, error) {
+	// TODO
+	return false, nil
+}
+
+func WriteBool(w io.Writer, b bool) error {
+	// TODO
+	return nil
+}
+
 func ReadString(r io.Reader) (string, error) {
 	n, err := ReadVarint(r)
 	if err != nil {
