@@ -43,14 +43,9 @@ func (t *ClientTabComplete) Encode(ww io.Writer) (err error) {
 	if err = packets.WriteString(ww, t.Text); err != nil {
 		return err
 	}
-	tmp0 := byte(0)
-	if t.HasPosition {
-		tmp0 = byte(1)
-	}
-	if err = binary.Write(ww, binary.BigEndian, tmp0); err != nil {
+	if err = packets.WriteBool(ww, t.HasPosition); err != nil {
 		return err
 	}
-
 	if t.HasPosition {
 		if err = binary.Write(ww, binary.BigEndian, t.LookedAtBlock); err != nil {
 			return err
@@ -64,12 +59,9 @@ func (t *ClientTabComplete) Decode(rr io.Reader) (err error) {
 	if t.Text, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	var tmp0 [1]byte
-	if _, err = rr.Read(tmp0[:1]); err != nil {
+	if t.HasPosition, err = packets.ReadBool(rr); err != nil {
 		return err
 	}
-	t.HasPosition = tmp0[0] == 0x01
-
 	if t.HasPosition {
 		if err = binary.Read(rr, binary.BigEndian, t.LookedAtBlock); err != nil {
 			return err

@@ -55,14 +55,9 @@ func (t *JoinGame) Encode(ww io.Writer) (err error) {
 	if err = packets.WriteString(ww, t.LevelType); err != nil {
 		return err
 	}
-	tmp0 := byte(0)
-	if t.ReducedDebug {
-		tmp0 = byte(1)
-	}
-	if err = binary.Write(ww, binary.BigEndian, tmp0); err != nil {
+	if err = packets.WriteBool(ww, t.ReducedDebug); err != nil {
 		return err
 	}
-
 	return
 }
 
@@ -90,12 +85,9 @@ func (t *JoinGame) Decode(rr io.Reader) (err error) {
 	if t.LevelType, err = packets.ReadString(rr); err != nil {
 		return err
 	}
-	var tmp0 [1]byte
-	if _, err = rr.Read(tmp0[:1]); err != nil {
+	if t.ReducedDebug, err = packets.ReadBool(rr); err != nil {
 		return err
 	}
-	t.ReducedDebug = tmp0[0] == 0x01
-
 	return
 }
 
@@ -219,46 +211,36 @@ func (t *PlayerListItem) Encode(ww io.Writer) (err error) {
 			if err = packets.WriteString(ww, t.Players[tmp6].Properties[tmp9].Value); err != nil {
 				return err
 			}
-			tmp10 := byte(0)
-			if t.Players[tmp6].Properties[tmp9].Signed {
-				tmp10 = byte(1)
-			}
-			if err = binary.Write(ww, binary.BigEndian, tmp10); err != nil {
+			if err = packets.WriteBool(ww, t.Players[tmp6].Properties[tmp9].Signed); err != nil {
 				return err
 			}
-
 			if t.Players[tmp6].Properties[tmp9].Signed {
 				if err = packets.WriteString(ww, t.Players[tmp6].Properties[tmp9].Signature); err != nil {
 					return err
 				}
 			}
 		}
-		tmp11 := make([]byte, binary.MaxVarintLen64)
-		tmp12 := packets.PutVarint(tmp11, int64(t.Players[tmp6].Gamemode))
-		if err = binary.Write(ww, binary.BigEndian, tmp11[:tmp12]); err != nil {
+		tmp10 := make([]byte, binary.MaxVarintLen64)
+		tmp11 := packets.PutVarint(tmp10, int64(t.Players[tmp6].Gamemode))
+		if err = binary.Write(ww, binary.BigEndian, tmp10[:tmp11]); err != nil {
 			return err
 		}
 
-		tmp13 := make([]byte, binary.MaxVarintLen64)
-		tmp14 := packets.PutVarint(tmp13, int64(t.Players[tmp6].Ping))
-		if err = binary.Write(ww, binary.BigEndian, tmp13[:tmp14]); err != nil {
+		tmp12 := make([]byte, binary.MaxVarintLen64)
+		tmp13 := packets.PutVarint(tmp12, int64(t.Players[tmp6].Ping))
+		if err = binary.Write(ww, binary.BigEndian, tmp12[:tmp13]); err != nil {
 			return err
 		}
 
-		tmp15 := byte(0)
+		if err = packets.WriteBool(ww, t.Players[tmp6].HasDisplayName); err != nil {
+			return err
+		}
 		if t.Players[tmp6].HasDisplayName {
-			tmp15 = byte(1)
-		}
-		if err = binary.Write(ww, binary.BigEndian, tmp15); err != nil {
-			return err
-		}
-
-		if t.Players[tmp6].HasDisplayName {
-			var tmp16 []byte
-			if tmp16, err = json.Marshal(&t.Players[tmp6].DisplayName); err != nil {
+			var tmp14 []byte
+			if tmp14, err = json.Marshal(&t.Players[tmp6].DisplayName); err != nil {
 				return err
 			}
-			if err = packets.WriteString(ww, string(tmp16)); err != nil {
+			if err = packets.WriteString(ww, string(tmp14)); err != nil {
 				return err
 			}
 		}
@@ -316,42 +298,36 @@ func (t *PlayerListItem) Decode(rr io.Reader) (err error) {
 			if t.Players[tmp4].Properties[tmp7].Value, err = packets.ReadString(rr); err != nil {
 				return err
 			}
-			var tmp8 [1]byte
-			if _, err = rr.Read(tmp8[:1]); err != nil {
+			if t.Players[tmp4].Properties[tmp7].Signed, err = packets.ReadBool(rr); err != nil {
 				return err
 			}
-			t.Players[tmp4].Properties[tmp7].Signed = tmp8[0] == 0x01
-
 			if t.Players[tmp4].Properties[tmp7].Signed {
 				if t.Players[tmp4].Properties[tmp7].Signature, err = packets.ReadString(rr); err != nil {
 					return err
 				}
 			}
 		}
+		tmp8, err := packets.ReadVarint(rr)
+		if err != nil {
+			return err
+		}
+		t.Players[tmp4].Gamemode = packets.VarInt(tmp8)
+
 		tmp9, err := packets.ReadVarint(rr)
 		if err != nil {
 			return err
 		}
-		t.Players[tmp4].Gamemode = packets.VarInt(tmp9)
+		t.Players[tmp4].Ping = packets.VarInt(tmp9)
 
-		tmp10, err := packets.ReadVarint(rr)
-		if err != nil {
+		if t.Players[tmp4].HasDisplayName, err = packets.ReadBool(rr); err != nil {
 			return err
 		}
-		t.Players[tmp4].Ping = packets.VarInt(tmp10)
-
-		var tmp11 [1]byte
-		if _, err = rr.Read(tmp11[:1]); err != nil {
-			return err
-		}
-		t.Players[tmp4].HasDisplayName = tmp11[0] == 0x01
-
 		if t.Players[tmp4].HasDisplayName {
-			var tmp12 string
-			if tmp12, err = packets.ReadString(rr); err != nil {
+			var tmp10 string
+			if tmp10, err = packets.ReadString(rr); err != nil {
 				return err
 			}
-			if err = json.Unmarshal([]byte(tmp12), &t.Players[tmp4].DisplayName); err != nil {
+			if err = json.Unmarshal([]byte(tmp10), &t.Players[tmp4].DisplayName); err != nil {
 				return err
 			}
 		}

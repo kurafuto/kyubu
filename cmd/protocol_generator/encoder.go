@@ -123,12 +123,15 @@ func (en *Encoder) writeField(t, name string, tag reflect.StructTag) {
 	// TODO: For ints, unwrap binary.Write() trickery to reuse []byte tmp.
 	switch t {
 	case "bool":
-		tmp := en.T() // byte value for bool
-		fmt.Fprintf(en.buf, "%s := byte(0)\n", tmp)
-		fmt.Fprintf(en.buf, "if %s {\n", name)
-		fmt.Fprintf(en.buf, "\t%s = byte(1)\n", tmp)
-		fmt.Fprintf(en.buf, "}\n")
-		fmt.Fprintf(en.buf, errWrap("binary.Write(ww, %s, %s)", Endianness, tmp))
+		/*
+			tmp := en.T() // byte value for bool
+			fmt.Fprintf(en.buf, "%s := byte(0)\n", tmp)
+			fmt.Fprintf(en.buf, "if %s {\n", name)
+			fmt.Fprintf(en.buf, "\t%s = byte(1)\n", tmp)
+			fmt.Fprintf(en.buf, "}\n")
+			fmt.Fprintf(en.buf, errWrap("binary.Write(ww, %s, %s)", Endianness, tmp))
+		*/
+		fmt.Fprintf(en.buf, "if err = packets.WriteBool(ww, %s); err != nil { return err }", name)
 	case "int8", "uint8", "int16", "uint16", "int32", "int64", "float32", "float64":
 		fmt.Fprintf(en.buf, errWrap("binary.Write(ww, %s, %s)", Endianness, name))
 	case "string":

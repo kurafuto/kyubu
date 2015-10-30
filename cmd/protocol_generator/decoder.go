@@ -139,10 +139,13 @@ func (de *Decoder) writeField(t, name string, tag reflect.StructTag) {
 	// TODO: For ints, unwrap binary.Read() trickery to reuse []byte tmp.
 	switch t {
 	case "bool":
-		tmp := de.T() // byte value for bool
-		fmt.Fprintf(de.buf, "var %s [1]byte\n", tmp)
-		fmt.Fprintf(de.buf, "if _, err = rr.Read(%s[:1]); err != nil { return err }\n", tmp)
-		fmt.Fprintf(de.buf, "%s = %s[0] == 0x01\n", name, tmp)
+		/*
+			tmp := de.T() // byte value for bool
+			fmt.Fprintf(de.buf, "var %s [1]byte\n", tmp)
+			fmt.Fprintf(de.buf, "if _, err = rr.Read(%s[:1]); err != nil { return err }\n", tmp)
+			fmt.Fprintf(de.buf, "%s = %s[0] == 0x01\n", name, tmp)
+		*/
+		fmt.Fprintf(de.buf, "if %s, err = packets.ReadBool(rr); err != nil { return err }", name)
 	case "int8", "uint8", "int16", "uint16", "int32", "int64", "float32", "float64":
 		fmt.Fprintf(de.buf, errWrap("binary.Read(rr, %s, %s)", Endianness, name))
 	case "string":
