@@ -23,7 +23,7 @@ type Parser struct {
 	conn net.Conn
 
 	zlibReader io.ReadCloser
-	zlibWriter *zlib.Writer // TODO
+	zlibWriter *zlib.Writer
 
 	State     State
 	Direction PacketDirection
@@ -126,8 +126,6 @@ func (p *Parser) Recv() (Packet, error) {
 
 	packet := f()
 
-	// XXX: Can we pool packet structs, or is that not feasible since there are
-	// underlying fields we don't know about in the generic type?
 	if err := packet.Decode(r); err != nil {
 		return nil, err
 	}
@@ -204,6 +202,7 @@ func (p *Parser) Send(packet Packet) error {
 }
 
 func (p *Parser) EnableEncryption(key []byte) error {
-	// TODO
+	// TODO: Set up EnableEncryption() with CFB8.
+	// http://wiki.vg/Protocol_Encryption, http://git.io/vlZiG
 	return nil
 }

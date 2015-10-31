@@ -43,15 +43,20 @@ type Packet interface {
 	Decode(io.Reader) error
 }
 
-// TODO: This crap.
 type PacketFunc func() Packet
+
+const (
+	NumStates     int = 4
+	NumDirections     = 3
+)
 
 // Packets is a multidimensional array/map used to store packet factories.
 // [4] = how many states there are
 // [3] = how many directions there are
 // [b] = packet ID byte
-var Packets [4][3]map[byte]PacketFunc
+var Packets [NumStates][NumDirections]map[byte]PacketFunc
 
+// XXX: Catch panics in case of out of bounds? Is that even possible?
 func Register(state State, dir PacketDirection, id byte, f PacketFunc) {
 	Packets[state][dir][id] = f
 }
